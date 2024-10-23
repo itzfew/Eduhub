@@ -35,7 +35,7 @@
 
         .scrollable-image {
             height: 50vh; /* Set height to half of the screen */
-            overflow-y: auto;
+            overflow-y: scroll; /* Allow scrolling for the image */
             margin-bottom: 20px;
             border-radius: 8px;
         }
@@ -46,9 +46,14 @@
         }
 
         .question {
+            display: none; /* Hide all questions initially */
             margin: 20px 0;
             padding: 15px;
             border-bottom: 1px solid #ddd;
+        }
+
+        .question.active {
+            display: block; /* Show only the active question */
         }
 
         label {
@@ -87,10 +92,6 @@
             justify-content: space-between;
         }
         
-        .option-container {
-            display: none;
-        }
-
         footer {
             margin-top: 20px;
             text-align: center;
@@ -153,12 +154,10 @@
                         questionDiv.className = 'question';
                         questionDiv.innerHTML = `
                             <p>${index + 1}. ${q.question}</p>
-                            <div class="option-container">
-                                <label><input type="radio" name="question${index}" value="1"> A</label>
-                                <label><input type="radio" name="question${index}" value="2"> B</label>
-                                <label><input type="radio" name="question${index}" value="3"> C</label>
-                                <label><input type="radio" name="question${index}" value="4"> D</label>
-                            </div>
+                            <label><input type="radio" name="question${index}" value="1"> A</label>
+                            <label><input type="radio" name="question${index}" value="2"> B</label>
+                            <label><input type="radio" name="question${index}" value="3"> C</label>
+                            <label><input type="radio" name="question${index}" value="4"> D</label>
                         `;
                         quizForm.appendChild(questionDiv);
                     });
@@ -175,7 +174,10 @@
         function showQuestion(index) {
             const questions = document.querySelectorAll('.question');
             questions.forEach((q, i) => {
-                q.querySelector('.option-container').style.display = (i === index) ? 'block' : 'none';
+                q.classList.remove('active');
+                if (i === index) {
+                    q.classList.add('active');
+                }
             });
             document.getElementById('prevBtn').style.display = (index === 0) ? 'none' : 'inline-block';
             document.getElementById('nextBtn').style.display = (index === questions.length - 1) ? 'none' : 'inline-block';
