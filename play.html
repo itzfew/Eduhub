@@ -30,6 +30,21 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 600px;
+            overflow: hidden;
+        }
+
+        #quizImage {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .scrollable-image {
+            overflow-x: auto;
+            overflow-y: hidden;
+            white-space: nowrap;
         }
 
         .question {
@@ -68,12 +83,18 @@
             border: 1px solid #ddd;
             border-radius: 8px;
         }
+
+        .option-container {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <h1 id="quizSubject"></h1>
     <div class="quiz-container">
-        <img id="quizImage" src="" alt="Quiz Image" style="width: 100%; border-radius: 8px;">
+        <div class="scrollable-image">
+            <img id="quizImage" src="" alt="Quiz Image">
+        </div>
         <form id="quizForm"></form>
         <button id="submitBtn"><i class="fas fa-check"></i> Submit Answers</button>
         <div id="result" class="result">
@@ -117,10 +138,12 @@
                         questionDiv.className = 'question';
                         questionDiv.innerHTML = `
                             <p>${index + 1}. ${q.question}</p>
-                            <label><input type="radio" name="question${index}" value="1"> A</label>
-                            <label><input type="radio" name="question${index}" value="2"> B</label>
-                            <label><input type="radio" name="question${index}" value="3"> C</label>
-                            <label><input type="radio" name="question${index}" value="4"> D</label>
+                            <div class="option-container">
+                                <label><input type="radio" name="question${index}" value="1"> A</label>
+                                <label><input type="radio" name="question${index}" value="2"> B</label>
+                                <label><input type="radio" name="question${index}" value="3"> C</label>
+                                <label><input type="radio" name="question${index}" value="4"> D</label>
+                            </div>
                         `;
                         quizForm.appendChild(questionDiv);
                     });
@@ -129,7 +152,19 @@
                     window.correctAnswers = quizData.questions.slice(0, numQuestions).map(q => q.correctOption);
                 }
             });
+
+            // Display questions one by one
+            showQuestion(0);
         });
+
+        let currentQuestionIndex = 0;
+
+        function showQuestion(index) {
+            const questions = document.querySelectorAll('.question');
+            questions.forEach((q, i) => {
+                q.querySelector('.option-container').style.display = (i === index) ? 'block' : 'none';
+            });
+        }
 
         document.getElementById('submitBtn').onclick = function() {
             const results = [];
@@ -148,6 +183,15 @@
                         score++;
                     }
                 }
+            });
+
+            // Save result to Firebase
+            const resultRef = database.ref('results').push();
+            resultRef.set({
+                subject: selectedSubject,
+                score: score,
+                total: results.length,
+                date: new Date().toISOString()
             });
 
             document.getElementById('resultSummary').innerText = `You scored ${score} out of ${results.length}`;
