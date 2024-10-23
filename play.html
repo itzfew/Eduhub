@@ -33,16 +33,16 @@
             overflow: hidden;
         }
 
-        #quizImage {
-            width: 100%;
-            max-height: 200px;
-            object-fit: cover;
+        .scrollable-image {
+            height: 50vh; /* Set height to half of the screen */
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin-bottom: 20px;
         }
 
-        .scrollable-image {
-            overflow-x: auto;
-            overflow-y: hidden;
-            white-space: nowrap;
+        #quizImage {
+            width: 100%;
+            object-fit: cover;
         }
 
         .question {
