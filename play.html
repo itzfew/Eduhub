@@ -37,8 +37,6 @@
             width: 100%;
             max-height: 200px;
             object-fit: cover;
-            overflow: hidden;
-            position: relative;
         }
 
         .scrollable-image {
@@ -87,6 +85,11 @@
         .option-container {
             display: none;
         }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+        }
     </style>
 </head>
 <body>
@@ -96,6 +99,10 @@
             <img id="quizImage" src="" alt="Quiz Image">
         </div>
         <form id="quizForm"></form>
+        <div class="navigation">
+            <button id="prevBtn" style="display: none;"><i class="fas fa-arrow-left"></i> Previous</button>
+            <button id="nextBtn"><i class="fas fa-arrow-right"></i> Next</button>
+        </div>
         <button id="submitBtn"><i class="fas fa-check"></i> Submit Answers</button>
         <div id="result" class="result">
             <h2>Your Results</h2>
@@ -150,11 +157,9 @@
 
                     // Store correct answers for result calculation
                     window.correctAnswers = quizData.questions.slice(0, numQuestions).map(q => q.correctOption);
+                    showQuestion(0);
                 }
             });
-
-            // Display questions one by one
-            showQuestion(0);
         });
 
         let currentQuestionIndex = 0;
@@ -164,7 +169,23 @@
             questions.forEach((q, i) => {
                 q.querySelector('.option-container').style.display = (i === index) ? 'block' : 'none';
             });
+            document.getElementById('prevBtn').style.display = (index === 0) ? 'none' : 'inline-block';
+            document.getElementById('nextBtn').style.display = (index === questions.length - 1) ? 'none' : 'inline-block';
         }
+
+        document.getElementById('nextBtn').onclick = function() {
+            if (currentQuestionIndex < window.correctAnswers.length - 1) {
+                currentQuestionIndex++;
+                showQuestion(currentQuestionIndex);
+            }
+        };
+
+        document.getElementById('prevBtn').onclick = function() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                showQuestion(currentQuestionIndex);
+            }
+        };
 
         document.getElementById('submitBtn').onclick = function() {
             const results = [];
@@ -196,6 +217,8 @@
 
             document.getElementById('resultSummary').innerText = `You scored ${score} out of ${results.length}`;
             document.getElementById('result').style.display = 'block';
+            document.querySelector('.navigation').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
         };
     </script>
 </body>
