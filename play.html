@@ -13,8 +13,7 @@
             padding: 0;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            height: 90vh;
+            height: 100vh;
             overflow: hidden;
         }
 
@@ -22,12 +21,13 @@
             color: #333;
             margin: 20px 0;
             font-size: 1.8em;
+            text-align: center;
         }
 
         .scrollable-image {
             flex: 0 0 50vh; /* Fixed height for image section */
             width: 100%;
-            overflow-y: auto;
+            overflow-y: auto; /* Allow image to scroll */
             margin-bottom: 10px;
             display: flex;
             justify-content: center;
@@ -43,7 +43,7 @@
         .question {
             display: none;
             margin: 10px 0;
-            padding: 5px;
+            padding: 15px;
             text-align: center;
         }
 
@@ -55,11 +55,11 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            margin: 5px 0;
+            margin: 10px 0;
         }
 
         label {
-            flex: 1 0 45%;
+            flex: 1 0 45%; /* Two options per line */
             margin: 5px;
             cursor: pointer;
             padding: 10px;
@@ -76,14 +76,14 @@
 
         button {
             width: 100%;
-            padding: 5px;
+            padding: 10px;
             border: none;
             border-radius: 5px;
             background-color: #28a745;
             color: white;
             font-size: 16px;
             cursor: pointer;
-            margin-top: 5px; /* Reduced margin for better visibility */
+            margin-top: 10px;
             transition: background-color 0.3s;
         }
 
@@ -267,11 +267,11 @@
             document.getElementById('result').style.display = 'block';
             document.querySelector('.navigation').style.display = 'none';
             document.getElementById('submitBtn').style.display = 'none';
-            document.querySelectorAll('.question').forEach(q => q.classList.remove('active')); // Hide questions
+            document.querySelectorAll('.question').forEach(q => q.classList.remove('active'));
         }
 
         document.getElementById('restartBtn').onclick = function() {
-            location.reload(); // Reload the page to restart the quiz
+            location.reload();
         };
     </script>
 </body>
