@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Quiz Questions</title>
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-storage.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f4;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-container {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            max-width: 500px;
+            margin: auto;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            color: #555;
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        #progressBar {
+            width: 100%;
+            height: 5px;
+            background-color: #007bff;
+            display: none;
+        }
+        footer {
+            text-align: center;
+            color: #333;
+            padding: 10px;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Add Quiz Questions</h1>
+    <div class="form-container">
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" placeholder="Enter subject name" required>
+
+        <label for="numQuestions">Number of Questions</label>
+        <input type="number" id="numQuestions" min="1" placeholder="Enter number of questions" required>
+
+        <label for="imageUpload">Upload Image with Questions</label>
+        <input type="file" id="imageUpload" accept="image/*" required>
+
+        <label for="correctOptions">Correct Options (comma separated indexes, e.g., 1, 3)</label>
+        <input type="text" id="correctOptions" placeholder="Enter correct option indexes" required>
+
+        <button id="submitBtn">Add Questions</button>
+        <div id="progressBar"></div>
+        <div id="message" class="message"></div>
+    </div>
+
+    <footer id="footer"></footer>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEHSaneKSBlpr5ZdDUJgECtp52h4bzP_Y",
+            authDomain: "studymaterialapp-ba546.firebaseapp.com",
+            databaseURL: "https://studymaterialapp-ba546-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "studymaterialapp-ba546",
+            storageBucket: "studymaterialapp-ba546.appspot.com",
+            messagingSenderId: "686553235115",
+            appId: "1:686553235115:web:690cdfa7c07994b349c1ee",
+            measurementId: "G-7C8K1P0H6W"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const storage = firebase.storage();
+
+        document.getElementById('submitBtn').onclick = function() {
+            const subject = document.getElementById('subject').value;
+            const numQuestions = parseInt(document.getElementById('numQuestions').value);
+            const imageFile = document.getElementById('imageUpload').files[0];
+            const correctOptions = document.getElementById('correctOptions').value.split(',').map(opt => parseInt(opt.trim()));
+
+            if (correctOptions.length !== numQuestions) {
+                showMessage(`Number of correct options must match the number of questions.`, 'error');
+                return;
+            }
+
+            const quizData = {
+                subjectName: subject,
+                questions: [],
+                dateAdded: new Date().toISOString(),
+                imageUrl: ''
+            };
+
+            const progressBar = document.getElementById('progressBar');
+            const messageBox = document.getElementById('message');
+            messageBox.style.display = 'none'; // Reset message display
+
+            if (imageFile) {
+                const storageRef = storage.ref(`quiz_images/${imageFile.name}`);
+                const uploadTask = storageRef.put(imageFile);
+
+                // Show progress bar
+                progressBar.style.display = 'block';
+                uploadTask.on('state_changed', 
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        progressBar.style.width = `${progress}%`;
+                    }, 
+                    (error) => {
+                        showMessage(`Error uploading image: ${error.message}`, 'error');
+                    }, 
+                    () => {
+                        // Upload completed successfully, now get the download URL
+                        uploadTask.snapshot.ref.getDownloadURL().then((downloadURL) => {
+                            quizData.imageUrl = downloadURL;
+                            for (let i = 0; i < numQuestions; i++) {
+                                quizData.questions.push({
+                                    question: `Question ${i + 1}`, // Placeholder for actual questions
+                                    correctOption: correctOptions[i]
+                                });
+                            }
+                            saveQuiz(quizData);
+                        });
+                    }
+                );
+            }
+        };
+
+        function saveQuiz(quizData) {
+            database.ref('quizzes').push(quizData)
+                .then(() => {
+                    showMessage('Quiz questions added successfully!', 'success');
+                    clearForm();
+                })
+                .catch(error => {
+                    showMessage(`Error adding quiz questions: ${error.message}`, 'error');
+                });
+        }
+
+        function showMessage(message, type) {
+            const messageBox = document.getElementById('message');
+            messageBox.className = `message ${type}`;
+            messageBox.innerText = message;
+            messageBox.style.display = 'block';
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 3000);
+        }
+
+        function clearForm() {
+            document.getElementById('subject').value = '';
+            document.getElementById('numQuestions').value = '';
+            document.getElementById('imageUpload').value = '';
+            document.getElementById('correctOptions').value = '';
+            document.getElementById('progressBar').style.display = 'none';
+            document.getElementById('progressBar').style.width = '0%';
+        }
+    </script>
+</body>
+</html>
