@@ -4,52 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Play</title>
-    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 20px;
+            font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
             min-height: 100vh;
         }
+
         h1 {
-            text-align: center;
             color: #333;
             margin-bottom: 20px;
         }
+
         .quiz-container {
             background-color: #fff;
             border-radius: 8px;
             padding: 20px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
         }
+
         .question {
             margin: 20px 0;
             padding: 15px;
             border-bottom: 1px solid #ddd;
         }
+
         label {
             display: block;
             margin: 10px 0;
             cursor: pointer;
         }
+
         button {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
+            width: 100%;
+            padding: 10px;
             border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
             font-size: 16px;
+            cursor: pointer;
             margin-top: 20px;
         }
+
         button:hover {
-            background-color: #0056b3;
+            background-color: #218838;
         }
+
         .result {
             display: none;
             margin-top: 20px;
@@ -65,38 +75,40 @@
     <div class="quiz-container">
         <img id="quizImage" src="" alt="Quiz Image" style="width: 100%; border-radius: 8px;">
         <form id="quizForm"></form>
-        <button id="submitBtn">Submit Answers</button>
+        <button id="submitBtn"><i class="fas fa-check"></i> Submit Answers</button>
         <div id="result" class="result">
             <h2>Your Results</h2>
             <p id="resultSummary"></p>
         </div>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
     <script>
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyAEHSaneKSBlpr5ZdDUJgECtp52h4bzP_Y",
-  authDomain: "studymaterialapp-ba546.firebaseapp.com",
-  databaseURL: "https://studymaterialapp-ba546-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "studymaterialapp-ba546",
-  storageBucket: "studymaterialapp-ba546.appspot.com",
-  messagingSenderId: "686553235115",
-  appId: "1:686553235115:web:690cdfa7c07994b349c1ee",
-  measurementId: "G-7C8K1P0H6W"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyAEHSaneKSBlpr5ZdDUJgECtp52h4bzP_Y",
+            authDomain: "studymaterialapp-ba546.firebaseapp.com",
+            databaseURL: "https://studymaterialapp-ba546-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "studymaterialapp-ba546",
+            storageBucket: "studymaterialapp-ba546.appspot.com",
+            messagingSenderId: "686553235115",
+            appId: "1:686553235115:web:690cdfa7c07994b349c1ee",
+            measurementId: "G-7C8K1P0H6W"
+        };
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
         const urlParams = new URLSearchParams(window.location.search);
-        const subjects = urlParams.get('subjects').split(',');
+        const selectedSubject = urlParams.get('subject');
         const numQuestions = parseInt(urlParams.get('numQuestions'));
+
+        document.getElementById('quizSubject').innerText = selectedSubject;
 
         database.ref('quizzes').once('value').then(snapshot => {
             snapshot.forEach(childSnapshot => {
                 const quizData = childSnapshot.val();
-                if (subjects.includes(quizData.subjectName)) {
-                    document.getElementById('quizSubject').innerText = quizData.subjectName;
+                if (quizData.subjectName === selectedSubject) {
                     document.getElementById('quizImage').src = quizData.imageUrl;
 
                     const quizForm = document.getElementById('quizForm');
@@ -112,6 +124,9 @@ const firebaseConfig = {
                         `;
                         quizForm.appendChild(questionDiv);
                     });
+
+                    // Store correct answers for result calculation
+                    window.correctAnswers = quizData.questions.slice(0, numQuestions).map(q => q.correctOption);
                 }
             });
         });
@@ -120,15 +135,16 @@ const firebaseConfig = {
             const results = [];
             let score = 0;
 
-            selectedQuestions.forEach((q, index) => {
+            const questions = Array.from(document.querySelectorAll('.question'));
+            questions.forEach((_, index) => {
                 const selected = document.querySelector(`input[name="question${index}"]:checked`);
                 if (selected) {
                     results.push({
-                        question: q.question,
-                        correct: q.correctOption,
+                        question: selected.parentNode.parentNode.firstChild.textContent,
+                        correct: window.correctAnswers[index],
                         selected: parseInt(selected.value)
                     });
-                    if (parseInt(selected.value) === q.correctOption) {
+                    if (parseInt(selected.value) === window.correctAnswers[index]) {
                         score++;
                     }
                 }
