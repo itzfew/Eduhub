@@ -36,8 +36,8 @@
         .scrollable-image {
             height: 50vh; /* Set height to half of the screen */
             overflow-y: auto;
-            overflow-x: hidden;
             margin-bottom: 20px;
+            border-radius: 8px;
         }
 
         #quizImage {
@@ -82,13 +82,19 @@
             border-radius: 8px;
         }
 
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+        }
+        
         .option-container {
             display: none;
         }
 
-        .navigation {
-            display: flex;
-            justify-content: space-between;
+        footer {
+            margin-top: 20px;
+            text-align: center;
+            color: #333;
         }
     </style>
 </head>
@@ -109,6 +115,8 @@
             <p id="resultSummary"></p>
         </div>
     </div>
+
+    <footer>&copy; 2024 Quiz Application</footer>
 
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
