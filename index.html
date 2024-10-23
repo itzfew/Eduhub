@@ -172,7 +172,7 @@
                 const subjects = new Set();
                 snapshot.forEach(childSnapshot => {
                     const quizData = childSnapshot.val();
-                    if (quizData.subjectName) { 
+                    if (quizData.subjectName) {
                         subjects.add(quizData.subjectName);
                     }
                 });
