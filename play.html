@@ -12,10 +12,11 @@
             background-color: #f4f4f4;
             margin: 0;
             padding: 0;
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
         }
 
         h1 {
@@ -28,7 +29,6 @@
             width: 100%; /* Full width */
             overflow-y: auto; /* Scroll if image is long */
             margin-bottom: 20px;
-            border-radius: 8px;
         }
 
         #quizImage {
@@ -40,7 +40,6 @@
             display: none; /* Hide all questions initially */
             margin: 20px 0;
             padding: 15px;
-            border-bottom: 1px solid #ddd;
         }
 
         .question.active {
@@ -73,11 +72,11 @@
             display: none;
             margin-top: 20px;
             padding: 20px;
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
+            background-color: #ffffff;
             border-radius: 8px;
             width: 100%;
             max-width: 600px;
+            text-align: center;
         }
 
         .navigation {
@@ -108,6 +107,7 @@
     <div id="result" class="result">
         <h2>Your Results</h2>
         <p id="resultSummary"></p>
+        <button id="restartBtn"><i class="fas fa-redo"></i> Restart Quiz</button>
     </div>
 
     <footer>&copy; 2024 Quiz Application</footer>
@@ -231,10 +231,21 @@
                 missed: questions.length - correctAnswersCount - incorrectAnswersCount // Count unattempted questions
             });
 
-            document.getElementById('resultSummary').innerText = `You scored ${score} points. Correct: ${correctAnswersCount}, Incorrect: ${incorrectAnswersCount}, Missed: ${questions.length - correctAnswersCount - incorrectAnswersCount}`;
+            // Show results
+            showResults(score, correctAnswersCount, incorrectAnswersCount, questions.length);
+        };
+
+        function showResults(score, correct, incorrect, total) {
+            document.getElementById('resultSummary').innerText = `You scored ${score} points. Correct: ${correct}, Incorrect: ${incorrect}, Missed: ${total - correct - incorrect}`;
             document.getElementById('result').style.display = 'block';
             document.querySelector('.navigation').style.display = 'none';
             document.getElementById('submitBtn').style.display = 'none';
+            const questions = document.querySelectorAll('.question');
+            questions.forEach(q => q.style.display = 'none'); // Hide all questions
+        }
+
+        document.getElementById('restartBtn').onclick = function() {
+            window.location.reload(); // Reload to restart the quiz
         };
     </script>
 </body>
