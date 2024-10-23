@@ -21,17 +21,22 @@
         h1 {
             color: #333;
             margin: 20px 0;
+            font-size: 1.8em;
         }
 
         .scrollable-image {
-            height: 50vh;
+            flex: 0 0 50vh; /* Fixed height for image section */
             width: 100%;
             overflow-y: auto;
             margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         #quizImage {
             width: 100%;
+            max-height: 100%;
             object-fit: cover;
         }
 
@@ -99,6 +104,18 @@
             margin-top: 20px;
             text-align: center;
             color: #333;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            button {
+                font-size: 14px;
+            }
+            label {
+                flex: 1 0 100%; /* Stack options on small screens */
+            }
         }
     </style>
 </head>
@@ -252,7 +269,7 @@
         }
 
         document.getElementById('restartBtn').onclick = function() {
-            window.location.reload();
+            location.reload(); // Reload the page to restart the quiz
         };
     </script>
 </body>
