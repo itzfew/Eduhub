@@ -12,10 +12,10 @@
             background-color: #f4f4f4;
             margin: 0;
             padding: 0;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            height: 100vh;
         }
 
         h1 {
@@ -26,28 +26,21 @@
         .scrollable-image {
             height: 50vh; /* Image takes half of the screen height */
             width: 100%; /* Full width */
-            overflow: hidden; /* Hide overflow for a neat appearance */
-            position: relative; /* Position for the image */
+            overflow-y: auto; /* Scroll if image is long */
+            margin-bottom: 20px;
+            border-radius: 8px;
         }
 
         #quizImage {
             width: 100%;
-            height: 100%;
             object-fit: cover; /* Cover the space */
-            position: absolute;
-            top: 0;
-            left: 0;
         }
 
         .question {
             display: none; /* Hide all questions initially */
             margin: 20px 0;
             padding: 15px;
-            background-color: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            width: 90%; /* Centering and fixed width */
-            max-width: 600px; /* Maximum width */
+            border-bottom: 1px solid #ddd;
         }
 
         .question.active {
@@ -83,15 +76,15 @@
             background-color: #f8f9fa;
             border: 1px solid #ddd;
             border-radius: 8px;
-            width: 90%;
-            max-width: 600px; /* Maximum width */
+            width: 100%;
+            max-width: 600px;
         }
 
         .navigation {
             display: flex;
             justify-content: space-between;
-            width: 90%; /* Centering */
-            max-width: 600px; /* Maximum width */
+            width: 100%;
+            max-width: 600px;
         }
 
         footer {
@@ -200,19 +193,28 @@
         document.getElementById('submitBtn').onclick = function() {
             const results = [];
             let score = 0;
+            let correctAnswersCount = 0;
+            let incorrectAnswersCount = 0;
 
             const questions = Array.from(document.querySelectorAll('.question'));
             questions.forEach((_, index) => {
                 const selected = document.querySelector(`input[name="question${index}"]:checked`);
-                if (selected) {
-                    results.push({
-                        question: selected.parentNode.parentNode.firstChild.textContent,
-                        correct: window.correctAnswers[index],
-                        selected: parseInt(selected.value)
-                    });
-                    if (parseInt(selected.value) === window.correctAnswers[index]) {
-                        score++;
-                    }
+                const correct = window.correctAnswers[index];
+
+                const response = {
+                    question: selected ? selected.parentNode.parentNode.firstChild.textContent : '',
+                    correct: correct,
+                    selected: selected ? parseInt(selected.value) : null
+                };
+
+                results.push(response);
+
+                if (response.selected === correct) {
+                    score += 4; // +4 for correct
+                    correctAnswersCount++;
+                } else if (response.selected !== null) {
+                    score -= 1; // -1 for incorrect
+                    incorrectAnswersCount++;
                 }
             });
 
@@ -221,11 +223,15 @@
             resultRef.set({
                 subject: selectedSubject,
                 score: score,
-                total: results.length,
-                date: new Date().toISOString()
+                date: new Date().toISOString(),
+                responses: results,
+                totalQuestions: questions.length,
+                correct: correctAnswersCount,
+                incorrect: incorrectAnswersCount,
+                missed: questions.length - correctAnswersCount - incorrectAnswersCount // Count unattempted questions
             });
 
-            document.getElementById('resultSummary').innerText = `You scored ${score} out of ${results.length}`;
+            document.getElementById('resultSummary').innerText = `You scored ${score} points. Correct: ${correctAnswersCount}, Incorrect: ${incorrectAnswersCount}, Missed: ${questions.length - correctAnswersCount - incorrectAnswersCount}`;
             document.getElementById('result').style.display = 'block';
             document.querySelector('.navigation').style.display = 'none';
             document.getElementById('submitBtn').style.display = 'none';
