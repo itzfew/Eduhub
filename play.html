@@ -12,10 +12,10 @@
             background-color: #f4f4f4;
             margin: 0;
             padding: 0;
-            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
+            height: 100vh;
         }
 
         h1 {
@@ -26,21 +26,28 @@
         .scrollable-image {
             height: 50vh; /* Image takes half of the screen height */
             width: 100%; /* Full width */
-            overflow-y: auto; /* Scroll if image is long */
-            margin-bottom: 20px;
-            border-radius: 8px;
+            overflow: hidden; /* Hide overflow for a neat appearance */
+            position: relative; /* Position for the image */
         }
 
         #quizImage {
             width: 100%;
+            height: 100%;
             object-fit: cover; /* Cover the space */
+            position: absolute;
+            top: 0;
+            left: 0;
         }
 
         .question {
             display: none; /* Hide all questions initially */
             margin: 20px 0;
             padding: 15px;
-            border-bottom: 1px solid #ddd;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 90%; /* Centering and fixed width */
+            max-width: 600px; /* Maximum width */
         }
 
         .question.active {
@@ -76,15 +83,15 @@
             background-color: #f8f9fa;
             border: 1px solid #ddd;
             border-radius: 8px;
-            width: 100%;
-            max-width: 600px;
+            width: 90%;
+            max-width: 600px; /* Maximum width */
         }
 
         .navigation {
             display: flex;
             justify-content: space-between;
-            width: 100%;
-            max-width: 600px;
+            width: 90%; /* Centering */
+            max-width: 600px; /* Maximum width */
         }
 
         footer {
