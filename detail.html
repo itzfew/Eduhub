@@ -42,6 +42,16 @@
         .result p {
             margin: 5px 0;
         }
+        .images-scroll {
+            display: flex;
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+        .images-scroll img {
+            max-height: 150px;
+            margin-right: 10px;
+            border-radius: 5px;
+        }
         .home-btn {
             background-color: #007bff;
             color: white;
@@ -50,10 +60,17 @@
             border-radius: 5px;
             cursor: pointer;
             text-align: center;
+            margin-top: 20px;
         }
         .home-btn:hover {
             background-color: #0056b3;
         }
+        .summary {
+            margin-top: 20px;
+        }
+        .correct { color: green; }
+        .incorrect { color: red; }
+        .missed { color: orange; }
     </style>
 </head>
 <body>
@@ -101,6 +118,31 @@
                         const resultData = childSnapshot.val();
                         const resultDiv = document.createElement('div');
                         resultDiv.className = 'result';
+
+                        // Image Gallery
+                        const imageGallery = `
+                            <div class="images-scroll">
+                                ${resultData.images.map(img => `<img src="${img}" alt="Quiz Image">`).join('')}
+                            </div>
+                        `;
+
+                        // Question Details
+                        const questionDetails = resultData.correctOptions.map((correctOption, index) => {
+                            const selectedOption = resultData.selectedOptions[index];
+                            const questionStatus = selectedOption === correctOption ? 
+                                `<span class="correct">Correct</span>` : 
+                                `<span class="incorrect">Incorrect</span>`;
+                            return `
+                                <div>
+                                    <strong>Question ${index + 1}:</strong>
+                                    <p>Selected Option: ${selectedOption}</p>
+                                    <p>Correct Option: ${correctOption}</p>
+                                    <p>Status: ${questionStatus}</p>
+                                    <hr>
+                                </div>
+                            `;
+                        }).join('');
+
                         resultDiv.innerHTML = `
                             <h3>Quiz Taken on: ${new Date(parseInt(childSnapshot.key)).toLocaleString()}</h3>
                             <p>Total Questions: ${resultData.correctOptions.length}</p>
@@ -108,9 +150,10 @@
                             <p>Incorrect: ${resultData.totalIncorrect}</p>
                             <p>Missed: ${resultData.totalMissed}</p>
                             <p>Total Score: ${resultData.totalScore}</p>
-                            <p>Images:</p>
-                            <div class="image-container">
-                                ${resultData.images.map(img => `<img src="${img}" alt="Quiz Image" style="width: 100%; max-height: 150px; margin-bottom: 10px;">`).join('')}
+                            ${imageGallery}
+                            <div class="summary">
+                                <h4>Question Summary:</h4>
+                                ${questionDetails}
                             </div>
                         `;
                         resultsContainer.appendChild(resultDiv);
