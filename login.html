@@ -138,6 +138,16 @@
         .attempt a:hover {
             text-decoration: underline;
         }
+
+        .home-btn {
+            background-color: #007bff;
+            color: white;
+            margin-top: 20px;
+        }
+
+        .home-btn:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
@@ -166,6 +176,8 @@
         <img id="profilePic" src="" alt="Profile Picture">
         <h2 id="profileName">User</h2>
         <p id="profileEmail">No email available</p>
+
+        <button class="home-btn" id="homeBtn"><i class="fas fa-home"></i> Go to Home</button>
 
         <div class="attempts-container" id="attemptsContainer">
             <h3>Attempted Tests</h3>
@@ -198,7 +210,7 @@
                 // User is signed in, show profile information
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('profileContainer').style.display = 'block';
-                document.getElementById('profileName').innerText = user.displayName || 'User';
+                document.getElementById('profileName').innerText = user.displayName || user.email.split('@')[0];
                 document.getElementById('profileEmail').innerText = user.email || 'No email available';
                 document.getElementById('profilePic').src = user.photoURL || 'https://via.placeholder.com/70';
                 fetchAttemptedTests(user.uid); // Fetch attempted tests for logged-in user
@@ -249,7 +261,6 @@
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider)
                 .then(result => {
-                    // User is signed in
                     showMessage("Login successful!", 'success');
                 })
                 .catch(error => {
@@ -278,6 +289,10 @@
             } else {
                 showMessage("Please enter your email first.", 'error');
             }
+        };
+
+        document.getElementById('homeBtn').onclick = function() {
+            window.location.href = 'index.html';
         };
 
         function showMessage(message, type) {
