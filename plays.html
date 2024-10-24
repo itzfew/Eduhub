@@ -165,13 +165,11 @@
                 });
 
                 if (quizzes.length > 0) {
-                    // Gather all questions and images
                     quizzes.forEach(quiz => {
                         selectedQuestions.push(...quiz.questions);
                         quizImages.push(quiz.imageUrl);
                     });
 
-                    // Limit the number of questions if specified
                     if (numQuestions && numQuestions < selectedQuestions.length) {
                         selectedQuestions = selectedQuestions.slice(0, numQuestions);
                     }
@@ -207,21 +205,15 @@
                 `).join('')}
             `;
 
-            // Update progress
             document.getElementById('progress').textContent = `Question ${currentQuestionIndex + 1} of ${selectedQuestions.length}`;
 
-            // Show or hide buttons
             document.getElementById('nextBtn').style.display = currentQuestionIndex < selectedQuestions.length - 1 ? 'block' : 'none';
             document.getElementById('submitBtn').style.display = currentQuestionIndex === selectedQuestions.length - 1 ? 'block' : 'none';
         }
 
         document.getElementById('nextBtn').onclick = function() {
             const selectedOption = document.querySelector(`input[name="question${currentQuestionIndex}"]:checked`);
-            if (selectedOption) {
-                userAnswers[currentQuestionIndex] = parseInt(selectedOption.value);
-            } else {
-                userAnswers[currentQuestionIndex] = null; // Mark as missed
-            }
+            userAnswers[currentQuestionIndex] = selectedOption ? parseInt(selectedOption.value) : null;
 
             currentQuestionIndex++;
             if (currentQuestionIndex < selectedQuestions.length) {
@@ -265,13 +257,12 @@
             document.getElementById('submitBtn').style.display = 'none';
             document.getElementById('result').style.display = 'block';
 
-            // Save results automatically
             saveResults();
         }
 
         function saveResults() {
             const userId = "user123"; // Replace with dynamic user ID if available
-            const resultKey = Date.now(); // Use timestamp as a unique key
+            const resultKey = Date.now();
 
             database.ref(`results/${userId}/${resultKey}`).set({
                 correctOptions: selectedQuestions.map(q => q.correctOption),
