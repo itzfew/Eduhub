@@ -302,17 +302,32 @@
             messageDiv.style.display = 'block';
         }
 
-        function fetchAttemptedTests(userId) {
-            const attemptsList = document.getElementById('attemptsList');
-            database.ref(`users/${userId}/attempts`).once('value').then(snapshot => {
-                attemptsList.innerHTML = ''; // Clear previous attempts
+        function fetchAttemptedExams(userId) {
+            const examList = document.getElementById('examList');
+            database.ref(`results/${userId}`).once('value').then(snapshot => {
+                examList.innerHTML = ''; // Clear previous attempts
                 snapshot.forEach(childSnapshot => {
-                    const { examID, date, score } = childSnapshot.val();
+                    const examData = childSnapshot.val();
+                    const examID = childSnapshot.key;
+                    const date = new Date(parseInt(examID)).toLocaleString(); // Convert timestamp to date
+                    const score = examData.totalScore;
+
                     const attemptItem = document.createElement('div');
-                    attemptItem.className = 'attempt';
-                    attemptItem.innerHTML = `<a href="detail.html?examID=${examID}">Exam ID: ${examID} | Date: ${date} | Score: ${score}</a>`;
-                    attemptsList.appendChild(attemptItem);
+                    attemptItem.className = 'exam-item';
+                    attemptItem.innerHTML = `
+                        Exam ID: ${examID} | Date: ${date} | Score: ${score}
+                        <span class="view-details" onclick="viewDetails('${examID}')">View Details</span>
+                    `;
+                    examList.appendChild(attemptItem);
                 });
+            });
+        }
+
+        function viewDetails(examID) {
+            const sanitizedEmail = firebase.auth().currentUser.email.replace('.', '_');
+            window.location.href = `detail.html?examID=${examID}&userID=${sanitizedEmail}`;
+        }
+
             });
         }
     </script>
