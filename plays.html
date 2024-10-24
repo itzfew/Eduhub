@@ -16,7 +16,7 @@
             margin: 0;
             padding: 20px;
             min-height: 100vh;
-            overflow-y: auto; /* Allow scrolling if content is too long */
+            overflow: hidden; /* Prevent scrolling of the whole page */
         }
 
         h1 {
@@ -24,11 +24,19 @@
             margin-bottom: 20px;
         }
 
+        .image-container {
+            width: 100%;
+            max-height: 400px;
+            overflow-y: auto; /* Allow internal scrolling for images */
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background-color: white;
+            padding: 10px;
+        }
+
         img {
             width: 100%;
-            max-height: 400px; /* Limit height */
-            object-fit: cover;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             border-radius: 8px;
         }
 
@@ -38,6 +46,8 @@
             background-color: white;
             border: 1px solid #ddd;
             border-radius: 8px;
+            width: 100%;
+            max-width: 500px; /* Limit question box width */
         }
 
         label {
@@ -56,6 +66,7 @@
             font-size: 16px;
             cursor: pointer;
             margin-top: 10px;
+            max-width: 500px;
         }
 
         button:hover {
@@ -69,6 +80,8 @@
             background-color: #f8f9fa;
             border: 1px solid #ddd;
             border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
         }
 
         .correct {
@@ -82,8 +95,11 @@
 </head>
 <body>
     <h1>Quiz</h1>
-    <div id="questionContainer"></div>
-    <button id="nextBtn">Next</button>
+    <div class="image-container" id="imageContainer"></div>
+    
+    <div id="questionContainer" class="question"></div>
+    
+    <button id="nextBtn">Next Question</button>
     <button id="submitBtn" style="display:none;">Submit</button>
     <div id="result" class="result">
         <h2>Your Results</h2>
@@ -130,42 +146,44 @@
                     selectedQuestions = quiz.questions.slice(0, numQuestions);
                     quizImages = quiz.imageUrl; // Get image URLs (expecting an array)
 
-                    displayQuestions();
+                    displayImages();
+                    displayQuestion();
                 } else {
                     alert('No quizzes found for this subject.');
                 }
             });
         }
 
-        function displayQuestions() {
+        function displayImages() {
+            const imageContainer = document.getElementById('imageContainer');
+            imageContainer.innerHTML = '';
+
+            if (Array.isArray(quizImages)) {
+                quizImages.forEach(imgUrl => {
+                    imageContainer.innerHTML += `<img src="${imgUrl}" alt="Quiz Image">`;
+                });
+            } else {
+                imageContainer.innerHTML += `<img src="${quizImages}" alt="Quiz Image">`;
+            }
+        }
+
+        function displayQuestion() {
             const questionContainer = document.getElementById('questionContainer');
             questionContainer.innerHTML = '';
 
-            // Display images
-            if (Array.isArray(quizImages)) {
-                quizImages.forEach(imgUrl => {
-                    questionContainer.innerHTML += `<img src="${imgUrl}" alt="Quiz Image">`;
-                });
-            } else {
-                questionContainer.innerHTML += `<img src="${quizImages}" alt="Quiz Image">`;
-            }
+            const currentQuestion = selectedQuestions[currentQuestionIndex];
+            questionContainer.innerHTML = `
+                <strong>${currentQuestionIndex + 1}. ${currentQuestion.question}</strong>
+                ${['A', 'B', 'C', 'D'].map((opt, i) => `
+                    <label>
+                        <input type="radio" name="question${currentQuestionIndex}" value="${i + 1}"> ${opt}
+                    </label>
+                `).join('')}
+            `;
 
-            // Display questions
-            selectedQuestions.forEach((currentQuestion, index) => {
-                questionContainer.innerHTML += `
-                    <div class="question">
-                        <strong>${index + 1}. ${currentQuestion.question}</strong>
-                        ${['A', 'B', 'C', 'D'].map((opt, i) => `
-                            <label>
-                                <input type="radio" name="question${index}" value="${i + 1}"> ${opt}
-                            </label>
-                        `).join('')}
-                    </div>
-                `;
-            });
-
-            document.getElementById('nextBtn').style.display = selectedQuestions.length > 1 ? 'block' : 'none';
-            document.getElementById('submitBtn').style.display = selectedQuestions.length === 1 ? 'block' : 'none';
+            // Show or hide buttons
+            document.getElementById('nextBtn').style.display = currentQuestionIndex < selectedQuestions.length - 1 ? 'block' : 'none';
+            document.getElementById('submitBtn').style.display = currentQuestionIndex === selectedQuestions.length - 1 ? 'block' : 'none';
         }
 
         document.getElementById('nextBtn').onclick = function() {
@@ -180,7 +198,7 @@
 
             currentQuestionIndex++;
             if (currentQuestionIndex < selectedQuestions.length) {
-                displayQuestions();
+                displayQuestion();
             } else {
                 showResults();
             }
