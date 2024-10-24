@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Application</title>
+    <title>Quiz Play</title>
+    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
@@ -13,67 +14,42 @@
             padding: 0;
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            align-items: center;
+            min-height: 100vh;
             overflow: hidden;
         }
 
         h1 {
             color: #333;
-            margin: 10px 0;
-            font-size: 1.8em;
-            text-align: center;
+            margin: 20px 0;
         }
 
         .scrollable-image {
-            flex: 0 0 50vh; /* Fixed height for image section */
-            width: 100%;
-            overflow-y: auto; /* Allow image to scroll */
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+            height: 50vh; /* Image takes half of the screen height */
+            width: 100%; /* Full width */
+            overflow-y: auto; /* Scroll if image is long */
+            margin-bottom: 20px;
         }
 
         #quizImage {
             width: 100%;
-            max-height: 100%;
-            object-fit: cover;
+            object-fit: cover; /* Cover the space */
         }
 
         .question {
-            display: none;
-            margin: 10px 0;
+            display: none; /* Hide all questions initially */
+            margin: 20px 0;
             padding: 15px;
-            text-align: center;
-            flex: 1; /* Allow questions to take available space */
         }
 
         .question.active {
-            display: block;
-        }
-
-        .options {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin: 10px 0;
+            display: block; /* Show only the active question */
         }
 
         label {
-            flex: 1 0 45%; /* Two options per line */
-            margin: 5px;
+            display: block;
+            margin: 10px 0;
             cursor: pointer;
-            padding: 10px;
-            background-color: #ffffff;
-            border-radius: 5px;
-            text-align: center;
-            border: 1px solid #ddd;
-            transition: background-color 0.3s;
-        }
-
-        label:hover {
-            background-color: #e0e0e0;
         }
 
         button {
@@ -85,8 +61,7 @@
             color: white;
             font-size: 16px;
             cursor: pointer;
-            margin-top: 10px;
-            transition: background-color 0.3s;
+            margin-top: 20px;
         }
 
         button:hover {
@@ -99,27 +74,22 @@
             padding: 20px;
             background-color: #ffffff;
             border-radius: 8px;
+            width: 100%;
+            max-width: 600px;
             text-align: center;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 600px;
         }
 
         footer {
-            margin-top: auto; /* Push footer to bottom */
+            margin-top: 20px;
             text-align: center;
             color: #333;
-            padding: 10px;
-        }
-
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.5em;
-            }
-            button {
-                font-size: 14px;
-                padding: 8px; /* Adjusted padding for small screens */
-            }
-            label {
-                flex: 1 0 100%; /* Stack options on small screens */
-            }
         }
     </style>
 </head>
@@ -177,16 +147,15 @@
                         questionDiv.className = 'question';
                         questionDiv.innerHTML = `
                             <p>${index + 1}. ${q.question}</p>
-                            <div class="options">
-                                <label><input type="radio" name="question${index}" value="1"> A</label>
-                                <label><input type="radio" name="question${index}" value="2"> B</label>
-                                <label><input type="radio" name="question${index}" value="3"> C</label>
-                                <label><input type="radio" name="question${index}" value="4"> D</label>
-                            </div>
+                            <label><input type="radio" name="question${index}" value="1"> A</label>
+                            <label><input type="radio" name="question${index}" value="2"> B</label>
+                            <label><input type="radio" name="question${index}" value="3"> C</label>
+                            <label><input type="radio" name="question${index}" value="4"> D</label>
                         `;
                         quizForm.appendChild(questionDiv);
                     });
 
+                    // Store correct answers for result calculation
                     window.correctAnswers = quizData.questions.slice(0, numQuestions).map(q => q.correctOption);
                     showQuestion(0);
                 }
@@ -241,14 +210,15 @@
                 results.push(response);
 
                 if (response.selected === correct) {
-                    score += 4;
+                    score += 4; // +4 for correct
                     correctAnswersCount++;
                 } else if (response.selected !== null) {
-                    score -= 1;
+                    score -= 1; // -1 for incorrect
                     incorrectAnswersCount++;
                 }
             });
 
+            // Save result to Firebase
             const resultRef = database.ref('results').push();
             resultRef.set({
                 subject: selectedSubject,
@@ -258,7 +228,25 @@
                 totalQuestions: questions.length,
                 correct: correctAnswersCount,
                 incorrect: incorrectAnswersCount,
-                missed: questions.length - correctAnswersCount - incorrectAnswersCount
+                missed: questions.length - correctAnswersCount - incorrectAnswersCount // Count unattempted questions
             });
 
-            showResults(score, correctAnswersCount
+            // Show results
+            showResults(score, correctAnswersCount, incorrectAnswersCount, questions.length);
+        };
+
+        function showResults(score, correct, incorrect, total) {
+            document.getElementById('resultSummary').innerText = `You scored ${score} points. Correct: ${correct}, Incorrect: ${incorrect}, Missed: ${total - correct - incorrect}`;
+            document.getElementById('result').style.display = 'block';
+            document.querySelector('.navigation').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
+            const questions = document.querySelectorAll('.question');
+            questions.forEach(q => q.style.display = 'none'); // Hide all questions
+        }
+
+        document.getElementById('restartBtn').onclick = function() {
+            window.location.reload(); // Reload to restart the quiz
+        };
+    </script>
+</body>
+</html>
