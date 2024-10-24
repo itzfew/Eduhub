@@ -16,7 +16,7 @@
             margin: 0;
             padding: 20px;
             min-height: 100vh;
-            overflow: hidden; /* Prevent scrolling of the whole page */
+            overflow: hidden;
         }
 
         h1 {
@@ -27,7 +27,7 @@
         .image-container {
             width: 100%;
             max-height: 400px;
-            overflow-y: auto; /* Allow internal scrolling for images */
+            overflow-y: auto;
             margin-bottom: 20px;
             border-radius: 8px;
             background-color: white;
@@ -47,7 +47,7 @@
             border: 1px solid #ddd;
             border-radius: 8px;
             width: 100%;
-            max-width: 500px; /* Limit question box width */
+            max-width: 500px;
         }
 
         label {
@@ -142,9 +142,16 @@
                 });
 
                 if (quizzes.length > 0) {
-                    const quiz = quizzes[0]; // Use the first quiz
-                    selectedQuestions = quiz.questions.slice(0, numQuestions);
-                    quizImages = quiz.imageUrl; // Get image URLs (expecting an array)
+                    // Gather all questions and images
+                    quizzes.forEach(quiz => {
+                        selectedQuestions.push(...quiz.questions);
+                        quizImages.push(quiz.imageUrl);
+                    });
+
+                    // Limit the number of questions if specified
+                    if (numQuestions && numQuestions < selectedQuestions.length) {
+                        selectedQuestions = selectedQuestions.slice(0, numQuestions);
+                    }
 
                     displayImages();
                     displayQuestion();
@@ -158,13 +165,9 @@
             const imageContainer = document.getElementById('imageContainer');
             imageContainer.innerHTML = '';
 
-            if (Array.isArray(quizImages)) {
-                quizImages.forEach(imgUrl => {
-                    imageContainer.innerHTML += `<img src="${imgUrl}" alt="Quiz Image">`;
-                });
-            } else {
-                imageContainer.innerHTML += `<img src="${quizImages}" alt="Quiz Image">`;
-            }
+            quizImages.forEach(imgUrl => {
+                imageContainer.innerHTML += `<img src="${imgUrl}" alt="Quiz Image">`;
+            });
         }
 
         function displayQuestion() {
