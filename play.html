@@ -3,19 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Play</title>
+    <title>Quiz</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            margin: 0;
-            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            margin: 0;
+            height: 100vh;
             overflow: hidden;
         }
 
@@ -24,26 +23,29 @@
             margin: 20px 0;
         }
 
-        .scrollable-image {
-            height: 50vh; /* Image takes half of the screen height */
-            width: 100%; /* Full width */
-            overflow-y: auto; /* Scroll if image is long */
-            margin-bottom: 20px;
+        .image-container {
+            width: 100%;
+            max-height: 350px;
+            overflow-y: auto;
+            background-color: white;
+            margin-bottom: 10px;
+            border-radius: 0px;
         }
 
-        #quizImage {
+        img {
             width: 100%;
-            object-fit: cover; /* Cover the space */
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
 
         .question {
-            display: none; /* Hide all questions initially */
             margin: 20px 0;
             padding: 15px;
-        }
-
-        .question.active {
-            display: block; /* Show only the active question */
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
         }
 
         label {
@@ -61,7 +63,8 @@
             color: white;
             font-size: 16px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 10px;
+            max-width: 500px;
         }
 
         button:hover {
@@ -72,45 +75,52 @@
             display: none;
             margin-top: 20px;
             padding: 20px;
-            background-color: #ffffff;
+            background-color: #fff;
+            border: 1px solid #ddd;
             border-radius: 8px;
             width: 100%;
-            max-width: 600px;
+            max-width: 500px;
             text-align: center;
         }
 
-        .navigation {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 600px;
+        .result h2 {
+            margin-bottom: 10px;
         }
 
-        footer {
-            margin-top: 20px;
-            text-align: center;
-            color: #333;
+        .result p {
+            margin: 5px 0;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        .missed {
+            color: orange;
+        }
+
+        .progress {
+            margin: 20px 0;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
-    <h1 id="quizSubject"></h1>
-    <div class="scrollable-image">
-        <img id="quizImage" src="" alt="Quiz Image">
-    </div>
-    <form id="quizForm"></form>
-    <div class="navigation">
-        <button id="prevBtn" style="display: none;"><i class="fas fa-arrow-left"></i> Previous</button>
-        <button id="nextBtn"><i class="fas fa-arrow-right"></i> Next</button>
-    </div>
-    <button id="submitBtn"><i class="fas fa-check"></i> Submit Answers</button>
+    <div class="image-container" id="imageContainer"></div>
+    
+    <div id="questionContainer" class="question"></div>
+    
+    <button id="nextBtn">Next Question</button>
+    <button id="submitBtn" style="display:none;">Submit</button>
+    <div class="progress" id="progress"></div>
     <div id="result" class="result">
         <h2>Your Results</h2>
         <p id="resultSummary"></p>
-        <button id="restartBtn"><i class="fas fa-redo"></i> Restart Quiz</button>
     </div>
-
-    <footer>&copy; 2024 Quiz Application</footer>
 
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
@@ -129,124 +139,142 @@
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const selectedSubject = urlParams.get('subject');
-        const numQuestions = parseInt(urlParams.get('numQuestions'));
+        let selectedQuestions = [];
+        let userAnswers = [];
+        let currentQuestionIndex = 0;
+        let quizImages = [];
+        let totalCorrect = 0;
+        let totalIncorrect = 0;
+        let totalMissed = 0;
+        let totalScore = 0;
 
-        document.getElementById('quizSubject').innerText = selectedSubject;
+        const params = new URLSearchParams(window.location.search);
+        const subject = params.get('subject');
+        const numQuestions = parseInt(params.get('numQuestions'));
 
-        database.ref('quizzes').once('value').then(snapshot => {
-            snapshot.forEach(childSnapshot => {
-                const quizData = childSnapshot.val();
-                if (quizData.subjectName === selectedSubject) {
-                    document.getElementById('quizImage').src = quizData.imageUrl;
+        fetchQuizData(subject, numQuestions);
 
-                    const quizForm = document.getElementById('quizForm');
-                    quizData.questions.slice(0, numQuestions).forEach((q, index) => {
-                        const questionDiv = document.createElement('div');
-                        questionDiv.className = 'question';
-                        questionDiv.innerHTML = `
-                            <p>${index + 1}. ${q.question}</p>
-                            <label><input type="radio" name="question${index}" value="1"> A</label>
-                            <label><input type="radio" name="question${index}" value="2"> B</label>
-                            <label><input type="radio" name="question${index}" value="3"> C</label>
-                            <label><input type="radio" name="question${index}" value="4"> D</label>
-                        `;
-                        quizForm.appendChild(questionDiv);
+        function fetchQuizData(subject, numQuestions) {
+            database.ref('quizzes').orderByChild('subjectName').equalTo(subject).once('value').then(snapshot => {
+                const quizzes = [];
+                snapshot.forEach(childSnapshot => {
+                    quizzes.push(childSnapshot.val());
+                });
+
+                if (quizzes.length > 0) {
+                    quizzes.forEach(quiz => {
+                        selectedQuestions.push(...quiz.questions);
+                        quizImages.push(quiz.imageUrl);
                     });
 
-                    // Store correct answers for result calculation
-                    window.correctAnswers = quizData.questions.slice(0, numQuestions).map(q => q.correctOption);
-                    showQuestion(0);
+                    if (numQuestions && numQuestions < selectedQuestions.length) {
+                        selectedQuestions = selectedQuestions.slice(0, numQuestions);
+                    }
+
+                    displayImages();
+                    displayQuestion();
+                } else {
+                    alert('No quizzes found for this subject.');
                 }
             });
-        });
+        }
 
-        let currentQuestionIndex = 0;
+        function displayImages() {
+            const imageContainer = document.getElementById('imageContainer');
+            imageContainer.innerHTML = '';
 
-        function showQuestion(index) {
-            const questions = document.querySelectorAll('.question');
-            questions.forEach((q, i) => {
-                q.classList.remove('active');
-                if (i === index) {
-                    q.classList.add('active');
-                }
+            quizImages.forEach(imgUrl => {
+                imageContainer.innerHTML += `<img src="${imgUrl}" alt="Quiz Image">`;
             });
-            document.getElementById('prevBtn').style.display = (index === 0) ? 'none' : 'inline-block';
-            document.getElementById('nextBtn').style.display = (index === questions.length - 1) ? 'none' : 'inline-block';
+        }
+
+        function displayQuestion() {
+            const questionContainer = document.getElementById('questionContainer');
+            questionContainer.innerHTML = '';
+
+            const currentQuestion = selectedQuestions[currentQuestionIndex];
+            questionContainer.innerHTML = `
+                <strong>${currentQuestionIndex + 1}. ${currentQuestion.question}</strong>
+                ${['A', 'B', 'C', 'D'].map((opt, i) => `
+                    <label>
+                        <input type="radio" name="question${currentQuestionIndex}" value="${i + 1}"> ${opt}
+                    </label>
+                `).join('')}
+            `;
+
+            document.getElementById('progress').textContent = `Question ${currentQuestionIndex + 1} of ${selectedQuestions.length}`;
+
+            document.getElementById('nextBtn').style.display = currentQuestionIndex < selectedQuestions.length - 1 ? 'block' : 'none';
+            document.getElementById('submitBtn').style.display = currentQuestionIndex === selectedQuestions.length - 1 ? 'block' : 'none';
         }
 
         document.getElementById('nextBtn').onclick = function() {
-            if (currentQuestionIndex < window.correctAnswers.length - 1) {
-                currentQuestionIndex++;
-                showQuestion(currentQuestionIndex);
-            }
-        };
+            const selectedOption = document.querySelector(`input[name="question${currentQuestionIndex}"]:checked`);
+            userAnswers[currentQuestionIndex] = selectedOption ? parseInt(selectedOption.value) : null;
 
-        document.getElementById('prevBtn').onclick = function() {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                showQuestion(currentQuestionIndex);
+            currentQuestionIndex++;
+            if (currentQuestionIndex < selectedQuestions.length) {
+                displayQuestion();
+            } else {
+                calculateResults();
+                showResults();
             }
         };
 
         document.getElementById('submitBtn').onclick = function() {
-            const results = [];
-            let score = 0;
-            let correctAnswersCount = 0;
-            let incorrectAnswersCount = 0;
+            calculateResults();
+            showResults();
+        };
 
-            const questions = Array.from(document.querySelectorAll('.question'));
-            questions.forEach((_, index) => {
-                const selected = document.querySelector(`input[name="question${index}"]:checked`);
-                const correct = window.correctAnswers[index];
-
-                const response = {
-                    question: selected ? selected.parentNode.parentNode.firstChild.textContent : '',
-                    correct: correct,
-                    selected: selected ? parseInt(selected.value) : null
-                };
-
-                results.push(response);
-
-                if (response.selected === correct) {
-                    score += 4; // +4 for correct
-                    correctAnswersCount++;
-                } else if (response.selected !== null) {
-                    score -= 1; // -1 for incorrect
-                    incorrectAnswersCount++;
+        function calculateResults() {
+            selectedQuestions.forEach((q, index) => {
+                if (userAnswers[index] === q.correctOption) {
+                    totalCorrect++;
+                } else if (userAnswers[index] === null) {
+                    totalMissed++;
+                } else {
+                    totalIncorrect++;
                 }
             });
 
-            // Save result to Firebase
-            const resultRef = database.ref('results').push();
-            resultRef.set({
-                subject: selectedSubject,
-                score: score,
-                date: new Date().toISOString(),
-                responses: results,
-                totalQuestions: questions.length,
-                correct: correctAnswersCount,
-                incorrect: incorrectAnswersCount,
-                missed: questions.length - correctAnswersCount - incorrectAnswersCount // Count unattempted questions
-            });
-
-            // Show results
-            showResults(score, correctAnswersCount, incorrectAnswersCount, questions.length);
-        };
-
-        function showResults(score, correct, incorrect, total) {
-            document.getElementById('resultSummary').innerText = `You scored ${score} points. Correct: ${correct}, Incorrect: ${incorrect}, Missed: ${total - correct - incorrect}`;
-            document.getElementById('result').style.display = 'block';
-            document.querySelector('.navigation').style.display = 'none';
-            document.getElementById('submitBtn').style.display = 'none';
-            const questions = document.querySelectorAll('.question');
-            questions.forEach(q => q.style.display = 'none'); // Hide all questions
+            totalScore = (totalCorrect * 4) - totalIncorrect;
         }
 
-        document.getElementById('restartBtn').onclick = function() {
-            window.location.reload(); // Reload to restart the quiz
-        };
+        function showResults() {
+            document.getElementById('resultSummary').innerHTML = `
+                <p>Total Questions: ${selectedQuestions.length}</p>
+                <p>Correct: <span class="correct">${totalCorrect}</span></p>
+                <p>Incorrect: <span class="incorrect">${totalIncorrect}</span></p>
+                <p>Missed: <span class="missed">${totalMissed}</span></p>
+                <p>Total Score: <strong>${totalScore}</strong></p>
+            `;
+
+            document.getElementById('questionContainer').style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
+            document.getElementById('result').style.display = 'block';
+
+            saveResults();
+        }
+
+        function saveResults() {
+            const userId = "user123"; // Replace with dynamic user ID if available
+            const resultKey = Date.now();
+
+            database.ref(`results/${userId}/${resultKey}`).set({
+                correctOptions: selectedQuestions.map(q => q.correctOption),
+                selectedOptions: userAnswers,
+                totalCorrect,
+                totalIncorrect,
+                totalMissed,
+                totalScore,
+                images: quizImages
+            }).then(() => {
+                console.log("Results saved successfully!");
+            }).catch(error => {
+                console.error("Error saving results:", error);
+            });
+        }
     </script>
 </body>
 </html>
