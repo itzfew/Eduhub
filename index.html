@@ -45,6 +45,25 @@
             box-shadow: 0px 8px 16px rgba(0, 0, 0, 0.2);
             z-index: 1;
             padding: 15px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .menu-content a {
+            display: block;
+            padding: 10px;
+            color: #333;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .menu-content a:hover {
+            background-color: #f0f0f0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         label {
@@ -117,6 +136,13 @@
             text-align: center;
             color: #333;
             padding: 10px;
+            font-size: 14px;
+        }
+
+        .user-info {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
         }
     </style>
 </head>
@@ -145,9 +171,12 @@
     <h2>Your Attempted Exams</h2>
     <div class="exam-list" id="examList"></div>
 
-    <footer id="footer"></footer>
+    <footer id="footer">
+        <div class="user-info" id="userInfo"></div>
+    </footer>
 
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
     <script>
         const firebaseConfig = {
@@ -162,9 +191,19 @@
         };
 
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const database = firebase.database();
 
-        fetchSubjects();
+        // Check if user is logged in
+        auth.onAuthStateChanged(user => {
+            if (!user) {
+                window.location.href = 'login.html'; // Redirect to login page if not logged in
+            } else {
+                fetchSubjects();
+                fetchAttemptedExams(user.uid);
+                document.getElementById('userInfo').innerText = `Logged in as: ${user.email}`;
+            }
+        });
 
         function fetchSubjects() {
             const subjectSelect = document.getElementById('subject');
@@ -197,6 +236,20 @@
 
             window.location.href = `play.html?subject=${encodeURIComponent(selectedSubject)}&numQuestions=${numQuestions}`;
         };
+
+        function fetchAttemptedExams(userId) {
+            const examList = document.getElementById('examList');
+            database.ref(`users/${userId}/attempts`).once('value').then(snapshot => {
+                examList.innerHTML = ''; // Clear previous attempts
+                snapshot.forEach(childSnapshot => {
+                    const { examID, date, score } = childSnapshot.val();
+                    const attemptItem = document.createElement('div');
+                    attemptItem.className = 'exam-item';
+                    attemptItem.innerHTML = `Exam ID: ${examID} | Date: ${date} | Score: ${score}`;
+                    examList.appendChild(attemptItem);
+                });
+            });
+        }
 
         function toggleMenu() {
             const menuContent = document.getElementById('menuContent');
