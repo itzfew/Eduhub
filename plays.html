@@ -104,6 +104,11 @@
         .missed {
             color: orange;
         }
+
+        .progress {
+            margin: 20px 0;
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
@@ -114,10 +119,10 @@
     
     <button id="nextBtn">Next Question</button>
     <button id="submitBtn" style="display:none;">Submit</button>
+    <div class="progress" id="progress"></div>
     <div id="result" class="result">
         <h2>Your Results</h2>
         <p id="resultSummary"></p>
-        <button id="saveResultsBtn">Save Results</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
@@ -202,6 +207,9 @@
                 `).join('')}
             `;
 
+            // Update progress
+            document.getElementById('progress').textContent = `Question ${currentQuestionIndex + 1} of ${selectedQuestions.length}`;
+
             // Show or hide buttons
             document.getElementById('nextBtn').style.display = currentQuestionIndex < selectedQuestions.length - 1 ? 'block' : 'none';
             document.getElementById('submitBtn').style.display = currentQuestionIndex === selectedQuestions.length - 1 ? 'block' : 'none';
@@ -256,25 +264,29 @@
             document.getElementById('nextBtn').style.display = 'none';
             document.getElementById('submitBtn').style.display = 'none';
             document.getElementById('result').style.display = 'block';
+
+            // Save results automatically
+            saveResults();
         }
 
-        document.getElementById('saveResultsBtn').onclick = function() {
+        function saveResults() {
             const userId = "user123"; // Replace with dynamic user ID if available
-            const resultData = {
-                correct: totalCorrect,
-                incorrect: totalIncorrect,
-                missed: totalMissed,
-                totalScore: totalScore,
-                images: quizImages,
-                date: new Date().toISOString(),
-            };
+            const resultKey = Date.now(); // Use timestamp as a unique key
 
-            database.ref(`results/${userId}`).push(resultData).then(() => {
-                alert('Results saved successfully!');
-            }).catch((error) => {
-                console.error('Error saving results: ', error);
+            database.ref(`results/${userId}/${resultKey}`).set({
+                correctOptions: selectedQuestions.map(q => q.correctOption),
+                selectedOptions: userAnswers,
+                totalCorrect,
+                totalIncorrect,
+                totalMissed,
+                totalScore,
+                images: quizImages
+            }).then(() => {
+                console.log("Results saved successfully!");
+            }).catch(error => {
+                console.error("Error saving results:", error);
             });
-        };
+        }
     </script>
 </body>
 </html>
