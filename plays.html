@@ -14,30 +14,28 @@
             flex-direction: column;
             align-items: center;
             margin: 0;
-            padding: 20px;
-            min-height: 100vh;
+            height: 100vh;
             overflow: hidden;
         }
 
         h1 {
             color: #333;
-            margin-bottom: 20px;
+            margin: 20px 0;
         }
 
         .image-container {
             width: 100%;
             max-height: 350px;
             overflow-y: auto;
-            margin-bottom: 5px;
-            border-radius: 0px;
             background-color: white;
-            padding: 0px;
+            margin-bottom: 20px;
+            border-radius: 8px;
         }
 
         img {
             width: 100%;
-            margin-bottom: 10px;
             border-radius: 8px;
+            margin-bottom: 10px;
         }
 
         .question {
@@ -113,6 +111,7 @@
 </head>
 <body>
 
+    <h1>Quiz</h1>
     <div class="image-container" id="imageContainer"></div>
     
     <div id="questionContainer" class="question"></div>
