@@ -19,15 +19,11 @@
         }
         .image-container {
             height: 50vh;
-            overflow: hidden;
-            position: relative;
+            overflow: auto; /* Allow internal scrolling */
         }
         .preview-image {
             width: 100%;
             height: auto;
-            position: absolute;
-            top: 0;
-            left: 0;
         }
         h1 {
             text-align: center;
@@ -145,7 +141,6 @@
                 </div>
             `;
 
-            document.getElementById('nextBtn').style.display = currentQuestionIndex === selectedQuestions.length - 1 ? 'none' : 'inline';
             document.getElementById('nextBtn').innerText = currentQuestionIndex === selectedQuestions.length - 1 ? 'Submit' : 'Next';
         }
 
