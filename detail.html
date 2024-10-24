@@ -29,30 +29,24 @@
             margin-bottom: 20px;
             padding: 20px;
         }
-        .result {
-            border-bottom: 1px solid #ddd;
-            padding: 10px 0;
-        }
-        .result:last-child {
-            border-bottom: none;
-        }
-        .result h3 {
-            margin: 5px 0;
-        }
-        .result p {
-            margin: 5px 0;
-        }
         .images-scroll {
             display: flex;
-            overflow-x: auto; /* Enables horizontal scrolling */
+            overflow-x: auto;
             margin-bottom: 20px;
-            padding: 10px 0; /* Add padding for aesthetic spacing */
+            padding: 10px 0; /* Add padding for better visual */
         }
         .images-scroll img {
-            max-height: 200px; /* Set a max height to maintain aspect ratio */
+            height: auto; /* Keep the aspect ratio */
+            max-height: 200px; /* Set a maximum height */
             margin-right: 10px; /* Space between images */
             border-radius: 5px;
         }
+        .summary {
+            margin-top: 20px;
+        }
+        .correct { color: green; }
+        .incorrect { color: red; }
+        .missed { color: orange; }
         .home-btn {
             background-color: #007bff;
             color: white;
@@ -66,23 +60,21 @@
         .home-btn:hover {
             background-color: #0056b3;
         }
-        .summary {
-            margin-top: 20px;
-        }
-        .correct { color: green; }
-        .incorrect { color: red; }
-        .missed { color: orange; }
     </style>
 </head>
 <body>
     <h1>Your Quiz Results</h1>
     <div id="resultsContainer"></div>
-    <button class="home-btn" id="homeBtn"><i class="fas fa-home"></i> Go to Home</button>
+    <button onclick="window.location.href='index.html'" class="home-btn"><i class="fas fa-home"></i> Go to Home</button>
 
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
     <script>
+        const params = new URLSearchParams(window.location.search);
+        const userEmail = params.get('userEmail').replace('.', '_'); // Use safe format for email
+        const resultKey = params.get('resultKey');
+
         const firebaseConfig = {
             apiKey: "AIzaSyAEHSaneKSBlpr5ZdDUJgECtp52h4bzP_Y",
             authDomain: "studymaterialapp-ba546.firebaseapp.com",
@@ -95,81 +87,36 @@
         };
 
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         const database = firebase.database();
 
-        // Check if user is authenticated
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                fetchResults(user.email);
-            } else {
-                alert('You must be logged in to view results.');
-                window.location.href = 'login.html'; // Redirect to login page
-            }
-        });
-
-        function fetchResults(userEmail) {
-            const safeEmail = userEmail.replace('.', '_'); // Use a safe format for the email
-            database.ref(`results/${safeEmail}`).once('value').then(snapshot => {
+        function fetchResults() {
+            database.ref(`results/${userEmail}/${resultKey}`).once('value').then(snapshot => {
                 const resultsContainer = document.getElementById('resultsContainer');
-                resultsContainer.innerHTML = ''; // Clear previous results
+                resultsContainer.innerHTML = '';
 
                 if (snapshot.exists()) {
-                    snapshot.forEach(childSnapshot => {
-                        const resultData = childSnapshot.val();
-                        const resultDiv = document.createElement('div');
-                        resultDiv.className = 'result';
+                    const resultData = snapshot.val();
+                    const imageGallery = resultData.images.map(img => `<img src="${img}" alt="Quiz Image">`).join('');
 
-                        // Image Gallery
-                        const imageGallery = `
-                            <div class="images-scroll">
-                                ${resultData.images.map(img => `<img src="${img}" alt="Quiz Image">`).join('')}
-                            </div>
-                        `;
-
-                        // Question Details
-                        const questionDetails = resultData.correctOptions.map((correctOption, index) => {
-                            const selectedOption = resultData.selectedOptions[index];
-                            const questionStatus = selectedOption === correctOption ? 
-                                `<span class="correct">Correct</span>` : 
-                                `<span class="incorrect">Incorrect</span>`;
-                            return `
-                                <div>
-                                    <strong>Question ${index + 1}:</strong>
-                                    <p>Selected Option: ${selectedOption}</p>
-                                    <p>Correct Option: ${correctOption}</p>
-                                    <p>Status: ${questionStatus}</p>
-                                    <hr>
-                                </div>
-                            `;
-                        }).join('');
-
-                        resultDiv.innerHTML = `
-                            <h3>Quiz Taken on: ${new Date(parseInt(childSnapshot.key)).toLocaleString()}</h3>
-                            <p>Total Questions: ${resultData.correctOptions.length}</p>
-                            <p>Correct: ${resultData.totalCorrect}</p>
-                            <p>Incorrect: ${resultData.totalIncorrect}</p>
-                            <p>Missed: ${resultData.totalMissed}</p>
-                            <p>Total Score: ${resultData.totalScore}</p>
-                            ${imageGallery}
-                            <div class="summary">
-                                <h4>Question Summary:</h4>
-                                ${questionDetails}
-                            </div>
-                        `;
-                        resultsContainer.appendChild(resultDiv);
-                    });
+                    resultsContainer.innerHTML = `
+                        <div class="result-container">
+                            <h3>Total Questions: ${resultData.correctOptions.length}</h3>
+                            <p>Correct: <span class="correct">${resultData.totalCorrect}</span></p>
+                            <p>Incorrect: <span class="incorrect">${resultData.totalIncorrect}</span></p>
+                            <p>Missed: <span class="missed">${resultData.totalMissed}</span></p>
+                            <p>Total Score: <strong>${resultData.totalScore}</strong></p>
+                            <div class="images-scroll">${imageGallery}</div>
+                        </div>
+                    `;
                 } else {
-                    resultsContainer.innerHTML = '<p>No quiz results found.</p>';
+                    resultsContainer.innerHTML = '<p>No results found.</p>';
                 }
             }).catch(error => {
                 console.error("Error fetching results:", error);
             });
         }
 
-        document.getElementById('homeBtn').onclick = function() {
-            window.location.href = 'index.html'; // Change to your home page
-        };
+        fetchResults();
     </script>
 </body>
 </html>
