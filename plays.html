@@ -10,18 +10,19 @@
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
             margin: 0;
             padding: 20px;
             min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             overflow: hidden;
         }
 
         h1 {
             color: #333;
             margin-bottom: 20px;
+            text-align: center;
         }
 
         .image-container {
@@ -29,15 +30,13 @@
             max-height: 400px;
             overflow-y: auto;
             margin-bottom: 20px;
-            border-radius: 8px;
-            background-color: white;
-            padding: 10px;
         }
 
         img {
             width: 100%;
             margin-bottom: 10px;
             border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .question {
@@ -48,6 +47,7 @@
             border-radius: 8px;
             width: 100%;
             max-width: 500px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         label {
@@ -67,6 +67,7 @@
             cursor: pointer;
             margin-top: 10px;
             max-width: 500px;
+            transition: background-color 0.3s;
         }
 
         button:hover {
@@ -83,10 +84,12 @@
             width: 100%;
             max-width: 500px;
             text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .result h2 {
             margin-bottom: 10px;
+            color: #333;
         }
 
         .result p {
@@ -108,11 +111,13 @@
         .progress {
             margin: 20px 0;
             font-size: 18px;
+            text-align: center;
+            color: #555;
         }
     </style>
 </head>
 <body>
-
+    <h1>Quiz</h1>
     <div class="image-container" id="imageContainer"></div>
     
     <div id="questionContainer" class="question"></div>
@@ -265,7 +270,6 @@
             document.getElementById('submitBtn').style.display = 'none';
             document.getElementById('result').style.display = 'block';
 
-            // Save results automatically
             saveResults();
         }
 
