@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz Play</title>
+    <title>Quiz App</title>
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -19,10 +19,14 @@
         }
         .image-container {
             height: 50vh;
-            overflow: auto; /* Allow internal scrolling */
+            overflow: auto;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .preview-image {
-            width: 100%;
+            max-width: 100%;
             height: auto;
         }
         h1 {
@@ -56,8 +60,9 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
-            margin-top: 20px;
+            margin-top: 10px;
             transition: background-color 0.3s;
+            width: 100%;
         }
         button:hover {
             background-color: #0056b3;
@@ -82,10 +87,14 @@
     <div class="image-container">
         <img src="https://firebasestorage.googleapis.com/v0/b/studymaterialapp-ba546.appspot.com/o/quiz_images%2F1000073902.jpg?alt=media&token=c58820da-59ca-44b8-8d78-2996d1ff3061" class="preview-image" alt="Quiz Preview">
     </div>
-    <h1>Quiz</h1>
+    <h1>Quiz App</h1>
     <div class="quiz-container">
         <div id="questionContainer"></div>
-        <button id="nextBtn">Next</button>
+        <div>
+            <button id="nextBtn">Next</button>
+            <button id="skipBtn">Skip</button>
+            <button id="submitBtn">Submit</button>
+        </div>
         <div id="result" class="result">
             <h2>Your Results</h2>
             <p id="resultSummary"></p>
@@ -141,34 +150,38 @@
                 </div>
             `;
 
-            document.getElementById('nextBtn').innerText = currentQuestionIndex === selectedQuestions.length - 1 ? 'Submit' : 'Next';
+            document.getElementById('nextBtn').style.display = currentQuestionIndex === selectedQuestions.length - 1 ? 'none' : 'block';
+            document.getElementById('submitBtn').style.display = currentQuestionIndex === selectedQuestions.length - 1 ? 'block' : 'none';
         }
 
         document.getElementById('nextBtn').onclick = function() {
             const selectedOption = document.querySelector(`input[name="question"]:checked`);
             if (selectedOption) {
                 userAnswers[currentQuestionIndex] = parseInt(selectedOption.value);
-                currentQuestionIndex++;
-                if (currentQuestionIndex < selectedQuestions.length) {
-                    displayQuestion();
-                } else {
-                    const score = calculateResults(selectedQuestions, userAnswers);
-                    showResults(selectedQuestions, userAnswers, score);
-                }
-            } else {
-                alert("Please select an option before proceeding.");
+            }
+            currentQuestionIndex++;
+            if (currentQuestionIndex < selectedQuestions.length) {
+                displayQuestion();
             }
         };
 
-        function calculateResults(questions, userAnswers) {
-            return questions.reduce((score, q, index) => {
-                return score + (userAnswers[index] === q.correctOption ? 1 : 0);
-            }, 0);
-        }
+        document.getElementById('skipBtn').onclick = function() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < selectedQuestions.length) {
+                displayQuestion();
+            } else {
+                showResults();
+            }
+        };
 
-        function showResults(questions, userAnswers, score) {
-            const total = questions.length;
-            const correct = questions.filter((q, index) => userAnswers[index] === q.correctOption).length;
+        document.getElementById('submitBtn').onclick = function() {
+            showResults();
+        };
+
+        function showResults() {
+            const score = calculateResults(selectedQuestions, userAnswers);
+            const total = selectedQuestions.length;
+            const correct = selectedQuestions.filter((q, index) => userAnswers[index] === q.correctOption).length;
 
             document.getElementById('resultSummary').innerHTML = `
                 <p>Total Questions: ${total}</p>
@@ -179,7 +192,15 @@
 
             document.getElementById('questionContainer').style.display = 'none';
             document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('skipBtn').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'none';
             document.getElementById('result').style.display = 'block';
+        }
+
+        function calculateResults(questions, userAnswers) {
+            return questions.reduce((score, q, index) => {
+                return score + (userAnswers[index] === q.correctOption ? 1 : 0);
+            }, 0);
         }
     </script>
 </body>
