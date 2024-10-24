@@ -77,11 +77,20 @@
             display: none;
             margin-top: 20px;
             padding: 20px;
-            background-color: #f8f9fa;
+            background-color: #fff;
             border: 1px solid #ddd;
             border-radius: 8px;
             width: 100%;
             max-width: 500px;
+            text-align: center;
+        }
+
+        .result h2 {
+            margin-bottom: 10px;
+        }
+
+        .result p {
+            margin: 5px 0;
         }
 
         .correct {
@@ -90,6 +99,10 @@
 
         .incorrect {
             color: red;
+        }
+
+        .missed {
+            color: orange;
         }
     </style>
 </head>
@@ -104,6 +117,7 @@
     <div id="result" class="result">
         <h2>Your Results</h2>
         <p id="resultSummary"></p>
+        <button id="saveResultsBtn">Save Results</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
@@ -127,6 +141,10 @@
         let userAnswers = [];
         let currentQuestionIndex = 0;
         let quizImages = [];
+        let totalCorrect = 0;
+        let totalIncorrect = 0;
+        let totalMissed = 0;
+        let totalScore = 0;
 
         const params = new URLSearchParams(window.location.search);
         const subject = params.get('subject');
@@ -194,32 +212,44 @@
             if (selectedOption) {
                 userAnswers[currentQuestionIndex] = parseInt(selectedOption.value);
             } else {
-                if (confirm("Do you want to skip this question?")) {
-                    userAnswers[currentQuestionIndex] = null; // Mark as skipped
-                }
+                userAnswers[currentQuestionIndex] = null; // Mark as missed
             }
 
             currentQuestionIndex++;
             if (currentQuestionIndex < selectedQuestions.length) {
                 displayQuestion();
             } else {
+                calculateResults();
                 showResults();
             }
         };
 
         document.getElementById('submitBtn').onclick = function() {
+            calculateResults();
             showResults();
         };
 
-        function showResults() {
-            const total = selectedQuestions.length;
-            const correct = selectedQuestions.filter((q, index) => userAnswers[index] === q.correctOption).length;
+        function calculateResults() {
+            selectedQuestions.forEach((q, index) => {
+                if (userAnswers[index] === q.correctOption) {
+                    totalCorrect++;
+                } else if (userAnswers[index] === null) {
+                    totalMissed++;
+                } else {
+                    totalIncorrect++;
+                }
+            });
 
+            totalScore = (totalCorrect * 4) - totalIncorrect;
+        }
+
+        function showResults() {
             document.getElementById('resultSummary').innerHTML = `
-                <p>Total Questions: ${total}</p>
-                <p>Correct: <span class="correct">${correct}</span></p>
-                <p>Incorrect: <span class="incorrect">${total - correct}</span></p>
-                <p>Missed: ${userAnswers.filter(ans => ans === null).length}</p>
+                <p>Total Questions: ${selectedQuestions.length}</p>
+                <p>Correct: <span class="correct">${totalCorrect}</span></p>
+                <p>Incorrect: <span class="incorrect">${totalIncorrect}</span></p>
+                <p>Missed: <span class="missed">${totalMissed}</span></p>
+                <p>Total Score: <strong>${totalScore}</strong></p>
             `;
 
             document.getElementById('questionContainer').style.display = 'none';
@@ -227,6 +257,24 @@
             document.getElementById('submitBtn').style.display = 'none';
             document.getElementById('result').style.display = 'block';
         }
+
+        document.getElementById('saveResultsBtn').onclick = function() {
+            const userId = "user123"; // Replace with dynamic user ID if available
+            const resultData = {
+                correct: totalCorrect,
+                incorrect: totalIncorrect,
+                missed: totalMissed,
+                totalScore: totalScore,
+                images: quizImages,
+                date: new Date().toISOString(),
+            };
+
+            database.ref(`results/${userId}`).push(resultData).then(() => {
+                alert('Results saved successfully!');
+            }).catch((error) => {
+                console.error('Error saving results: ', error);
+            });
+        };
     </script>
 </body>
 </html>
