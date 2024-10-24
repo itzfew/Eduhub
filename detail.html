@@ -50,9 +50,11 @@
         }
         .images-scroll img {
             width: 100%; /* Set width to 100% */
+            max-height: 150px; /* Set a max height for the images */
             height: auto; /* Maintain aspect ratio */
             margin-bottom: 10px; /* Space between images */
             border-radius: 5px;
+            object-fit: cover; /* Cover the area without stretching */
         }
         .home-btn {
             background-color: #007bff;
