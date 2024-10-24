@@ -56,7 +56,6 @@
             height: auto; /* Maintain aspect ratio */
             margin-bottom: 10px; /* Space between images */
             border-radius: 5px;
-            object-fit: cover; /* Cover the area without stretching */
         }
         .home-btn {
             background-color: #007bff;
@@ -81,7 +80,7 @@
 </head>
 <body>
     <h1>Your Quiz Results</h1>
-    <div id="resultsContainer"></div>
+    <div id="resultsContainer" class="result-container"></div>
     <button class="home-btn" id="homeBtn"><i class="fas fa-home"></i> Go to Home</button>
 
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
@@ -131,7 +130,7 @@
                                 ${resultData.images.map(img => `<img src="${img}" alt="Quiz Image">`).join('')}
                             </div>
                         `;
- 
+
                         // Question Details
                         const questionDetails = resultData.correctOptions.map((correctOption, index) => {
                             const selectedOption = resultData.selectedOptions[index];
