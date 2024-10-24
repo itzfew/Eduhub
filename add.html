@@ -127,6 +127,8 @@
         const database = firebase.database();
         const storage = firebase.storage();
 
+        let imageCount = 0; // To keep track of images uploaded for the subject
+
         document.getElementById('submitBtn').onclick = function() {
             const subject = document.getElementById('subject').value;
             const numQuestions = parseInt(document.getElementById('numQuestions').value);
@@ -150,7 +152,8 @@
             messageBox.style.display = 'none'; // Reset message display
 
             if (imageFile) {
-                const storageRef = storage.ref(`quiz_images/${imageFile.name}`);
+                const imageName = `${subject.replace(/\s+/g, '_')}_${++imageCount}`; // Generate unique name
+                const storageRef = storage.ref(`quiz_images/${imageName}_${imageFile.name}`);
                 const uploadTask = storageRef.put(imageFile);
 
                 // Show progress bar
