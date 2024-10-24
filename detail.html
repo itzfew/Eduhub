@@ -45,14 +45,14 @@
             margin: 5px 0;
         }
         .images-scroll {
-            max-height: 200px; /* Set a max height for the image container */
+            max-height: 400px; /* Set a max height for the image container */
             overflow-y: auto; /* Enables vertical scrolling within this container */
             margin-bottom: 20px;
             padding-right: 10px; /* Add padding to the right for scrollbar */
         }
         .images-scroll img {
-            width: 100%; /* Set width to 100% */
-            max-height: 150px; /* Set a max height for the images */
+            width: auto; /* Maintain original width */
+            max-width: 100%; /* Ensure it doesn't exceed the container width */
             height: auto; /* Maintain aspect ratio */
             margin-bottom: 10px; /* Space between images */
             border-radius: 5px;
