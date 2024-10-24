@@ -19,11 +19,10 @@
         }
         .image-container {
             height: auto;
-            overflow: auto;
+            overflow-y: auto;
             background-color: #fff;
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            justify-content: center;
             padding: 10px;
         }
         .preview-image {
@@ -83,20 +82,11 @@
         .incorrect {
             color: red;
         }
-        .confirmation {
-            display: none;
-            padding: 10px;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-            border-radius: 5px;
-            color: #721c24;
-            margin: 10px 0;
-        }
     </style>
 </head>
 <body>
     <div class="image-container" id="imageContainer">
-        <!-- Images will be dynamically inserted here -->
+        <!-- Image will be dynamically inserted here -->
     </div>
     <h1>Quiz App</h1>
     <div class="quiz-container">
@@ -108,11 +98,6 @@
         <div id="result" class="result">
             <h2>Your Results</h2>
             <p id="resultSummary"></p>
-        </div>
-        <div id="confirmation" class="confirmation">
-            <p>Do you want to skip this question?</p>
-            <button id="confirmSkipBtn">Yes</button>
-            <button id="cancelSkipBtn">No</button>
         </div>
     </div>
 
@@ -135,33 +120,27 @@
         let selectedQuestions = [];
         let userAnswers = [];
         let currentQuestionIndex = 0;
-        let imageUrls = []; // To store image URLs
 
         // Fetch quiz data including images
         database.ref(`quizzes/${quizID}`).once('value').then(snapshot => {
             const quizData = snapshot.val();
             const questions = quizData.questions;
-            imageUrls = quizData.images || []; // Assuming images are stored in quizData.images
 
+            // Store quiz image and questions
             selectedQuestions = questions.map((q, index) => ({
                 question: q.question,
                 correctOption: q.correctOption,
                 index: index
             }));
 
-            displayImages();
+            // Display the quiz image
+            displayImage(quizData.imageUrl);
             displayQuestion();
         });
 
-        function displayImages() {
+        function displayImage(imageUrl) {
             const imageContainer = document.getElementById('imageContainer');
-            imageContainer.innerHTML = ''; // Clear previous images
-            imageUrls.forEach(url => {
-                const imgElement = document.createElement('img');
-                imgElement.src = url;
-                imgElement.classList.add('preview-image');
-                imageContainer.appendChild(imgElement);
-            });
+            imageContainer.innerHTML = `<img src="${imageUrl}" class="preview-image" alt="Quiz Image">`;
         }
 
         function displayQuestion() {
@@ -219,22 +198,11 @@
             const correct = selectedQuestions.filter((q, index) => userAnswers[index] === q.correctOption).length;
             const incorrect = total - correct - userAnswers.filter(ans => ans === null).length;
 
-            const resultsData = {
-                selectedOptions: userAnswers,
-                correctOptions: selectedQuestions.map(q => q.correctOption),
-                totalCorrect: correct,
-                totalIncorrect: incorrect,
-                totalMissed: userAnswers.filter(ans => ans === null).length,
-                totalScore: score
-            };
-
-            saveResultsToFirebase(resultsData);
-
             document.getElementById('resultSummary').innerHTML = `
                 <p>Total Questions: ${total}</p>
                 <p>Correct: <span class="correct">${correct}</span></p>
                 <p>Incorrect: <span class="incorrect">${incorrect}</span></p>
-                <p>Missed: ${resultsData.totalMissed}</p>
+                <p>Missed: ${userAnswers.filter(ans => ans === null).length}</p>
                 <p>Total Score: ${score} out of ${total}</p>
             `;
 
@@ -254,14 +222,6 @@
                     return score - 1; // -1 for incorrect
                 }
             }, 0);
-        }
-
-        function saveResultsToFirebase(results) {
-            const userId = "user123"; // Replace with actual user ID
-            const resultsRef = database.ref(`results/${userId}/${Date.now()}`);
-            resultsRef.set(results)
-                .then(() => console.log("Results saved successfully!"))
-                .catch(error => console.error("Error saving results:", error));
         }
     </script>
 </body>
