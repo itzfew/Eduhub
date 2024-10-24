@@ -302,33 +302,30 @@
             messageDiv.style.display = 'block';
         }
 
-        function fetchAttemptedExams(userId) {
-            const examList = document.getElementById('examList');
+        function fetchAttemptedTests(userId) {
+            const attemptsList = document.getElementById('attemptsList');
             database.ref(`results/${userId}`).once('value').then(snapshot => {
-                examList.innerHTML = ''; // Clear previous attempts
+                attemptsList.innerHTML = ''; // Clear previous attempts
                 snapshot.forEach(childSnapshot => {
-                    const examData = childSnapshot.val();
-                    const examID = childSnapshot.key;
-                    const date = new Date(parseInt(examID)).toLocaleString(); // Convert timestamp to date
-                    const score = examData.totalScore;
+                    const attemptData = childSnapshot.val();
+                    const attemptID = childSnapshot.key;
+                    const date = new Date(parseInt(attemptID)).toLocaleString(); // Convert timestamp to date
+                    const score = attemptData.totalScore;
 
                     const attemptItem = document.createElement('div');
-                    attemptItem.className = 'exam-item';
+                    attemptItem.className = 'attempt';
                     attemptItem.innerHTML = `
-                        Exam ID: ${examID} | Date: ${date} | Score: ${score}
-                        <span class="view-details" onclick="viewDetails('${examID}')">View Details</span>
+                        Attempt ID: ${attemptID} | Date: ${date} | Score: ${score}
+                        <span class="view-details" onclick="viewDetails('${attemptID}')">View Details</span>
                     `;
-                    examList.appendChild(attemptItem);
+                    attemptsList.appendChild(attemptItem);
                 });
             });
         }
 
-        function viewDetails(examID) {
+        function viewDetails(attemptID) {
             const sanitizedEmail = firebase.auth().currentUser.email.replace('.', '_');
-            window.location.href = `detail.html?examID=${examID}&userID=${sanitizedEmail}`;
-        }
-
-            });
+            window.location.href = `detail.html?attemptID=${attemptID}&userID=${sanitizedEmail}`;
         }
     </script>
 </body>
