@@ -29,7 +29,8 @@
             overflow-y: auto;
             background-color: white;
             margin-bottom: 10px;
-            border-radius: 0px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         img {
@@ -81,10 +82,12 @@
             width: 100%;
             max-width: 500px;
             text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .result h2 {
             margin-bottom: 10px;
+            color: #333;
         }
 
         .result p {
@@ -93,19 +96,39 @@
 
         .correct {
             color: green;
+            font-weight: bold;
         }
 
         .incorrect {
             color: red;
+            font-weight: bold;
         }
 
         .missed {
             color: orange;
+            font-weight: bold;
         }
 
         .progress {
             margin: 20px 0;
             font-size: 18px;
+        }
+
+        footer {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: #333;
+            padding: 10px;
+            font-size: 14px;
+        }
+
+        .user-info {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
         }
     </style>
 </head>
@@ -122,7 +145,12 @@
         <p id="resultSummary"></p>
     </div>
 
+    <footer id="footer">
+        <div class="user-info" id="userInfo"></div>
+    </footer>
+
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
     <script>
         const firebaseConfig = {
@@ -137,6 +165,7 @@
         };
 
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const database = firebase.database();
 
         let selectedQuestions = [];
@@ -147,12 +176,23 @@
         let totalIncorrect = 0;
         let totalMissed = 0;
         let totalScore = 0;
+        let userEmail = "";
+        let userFirstName = "";
 
         const params = new URLSearchParams(window.location.search);
         const subject = params.get('subject');
         const numQuestions = parseInt(params.get('numQuestions'));
 
-        fetchQuizData(subject, numQuestions);
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                userEmail = user.email;
+                userFirstName = user.email.split('@')[0]; // Extract first name from email
+                document.getElementById('userInfo').innerText = `Logged in as: ${userEmail}`;
+                fetchQuizData(subject, numQuestions);
+            } else {
+                window.location.href = 'login.html'; // Redirect if not logged in
+            }
+        });
 
         function fetchQuizData(subject, numQuestions) {
             database.ref('quizzes').orderByChild('subjectName').equalTo(subject).once('value').then(snapshot => {
@@ -197,7 +237,7 @@
                 <strong>${currentQuestionIndex + 1}. ${currentQuestion.question}</strong>
                 ${['A', 'B', 'C', 'D'].map((opt, i) => `
                     <label>
-                        <input type="radio" name="question${currentQuestionIndex}" value="${i + 1}"> ${opt}
+                        <input type="radio" name="question${currentQuestionIndex}" value="${i + 1}"> ${opt}: ${currentQuestion.options[i]}
                     </label>
                 `).join('')}
             `;
@@ -258,7 +298,7 @@
         }
 
         function saveResults() {
-            const userId = "user123"; // Replace with dynamic user ID if available
+            const userId = userEmail; // Use email as user ID
             const resultKey = Date.now();
 
             database.ref(`results/${userId}/${resultKey}`).set({
@@ -268,7 +308,9 @@
                 totalIncorrect,
                 totalMissed,
                 totalScore,
-                images: quizImages
+                images: quizImages,
+                userEmail: userEmail,
+                userFirstName: userFirstName
             }).then(() => {
                 console.log("Results saved successfully!");
             }).catch(error => {
