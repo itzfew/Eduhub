@@ -18,17 +18,26 @@
             min-height: 100vh;
         }
         .image-container {
-            height: auto;
-            overflow-y: auto;
+            height: 50vh; /* First image takes up 50% of the screen height */
+            overflow-y: auto; /* Allow scrolling */
             background-color: #fff;
             display: flex;
             justify-content: center;
-            padding: 10px;
+            align-items: center;
+            position: relative;
         }
         .preview-image {
             max-width: 100%;
             height: auto;
-            margin-bottom: 10px;
+        }
+        .additional-images {
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+        .additional-images img {
+            max-width: 100%;
+            margin: 5px 0;
         }
         h1 {
             text-align: center;
@@ -86,7 +95,11 @@
 </head>
 <body>
     <div class="image-container" id="imageContainer">
-        <!-- Image will be dynamically inserted here -->
+        <!-- Main image will be dynamically inserted here -->
+        <img src="" class="preview-image" id="mainImage" alt="Quiz Image">
+    </div>
+    <div class="additional-images" id="additionalImages">
+        <!-- Additional images will be dynamically inserted here -->
     </div>
     <h1>Quiz App</h1>
     <div class="quiz-container">
@@ -133,14 +146,21 @@
                 index: index
             }));
 
-            // Display the quiz image
-            displayImage(quizData.imageUrl);
+            // Display the main quiz image
+            document.getElementById('mainImage').src = quizData.imageUrl;
+
+            // Display additional images if any
+            displayAdditionalImages(quizData.additionalImages || []);
             displayQuestion();
         });
 
-        function displayImage(imageUrl) {
-            const imageContainer = document.getElementById('imageContainer');
-            imageContainer.innerHTML = `<img src="${imageUrl}" class="preview-image" alt="Quiz Image">`;
+        function displayAdditionalImages(images) {
+            const additionalImagesContainer = document.getElementById('additionalImages');
+            images.forEach(image => {
+                const imgElement = document.createElement('img');
+                imgElement.src = image; // Assuming image URL is directly provided
+                additionalImagesContainer.appendChild(imgElement);
+            });
         }
 
         function displayQuestion() {
