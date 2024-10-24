@@ -16,19 +16,16 @@
             flex-direction: column;
             align-items: center;
         }
-
         .form-section, .profile-section {
             width: 90%;
             max-width: 400px;
             text-align: center;
             margin-bottom: 20px;
         }
-
         h1, h3 {
             color: #333;
             margin-bottom: 20px;
         }
-
         input {
             width: 100%;
             padding: 10px;
@@ -37,7 +34,6 @@
             border-radius: 5px;
             font-size: 16px;
         }
-
         button {
             width: 100%;
             padding: 10px;
@@ -50,39 +46,32 @@
             margin: 5px 0;
             position: relative;
         }
-
         button:hover {
             background-color: #218838;
         }
-
         #message {
             margin-top: 10px;
             padding: 10px;
             border-radius: 5px;
             display: none;
         }
-
         .error {
             background-color: #f8d7da;
             color: #721c24;
         }
-
         .success {
             background-color: #d4edda;
             color: #155724;
         }
-
         .input-group {
             position: relative;
         }
-
         .input-group i {
             position: absolute;
             left: 10px;
             top: 10px;
             color: #aaa;
         }
-
         .spinner {
             display: none;
             position: absolute;
@@ -90,38 +79,31 @@
             top: 50%;
             transform: translateY(-50%);
         }
-
         .forgot-password {
             margin-top: 10px;
             font-size: 14px;
             color: #007bff;
             cursor: pointer;
         }
-
         .forgot-password:hover {
             text-decoration: underline;
         }
-
         .profile img {
             width: 70px;
             border-radius: 50%;
             margin-bottom: 10px;
         }
-
         .logout-btn {
             background-color: #dc3545;
         }
-
         .logout-btn:hover {
             background-color: #c82333;
         }
-
         .attempts-container {
             margin-top: 20px;
             text-align: left;
             width: 100%;
         }
-
         .attempt {
             padding: 10px;
             border: 1px solid #ddd;
@@ -129,22 +111,18 @@
             margin: 5px 0;
             background-color: #f9f9f9;
         }
-
         .attempt a {
             color: #007bff;
             text-decoration: none;
         }
-
         .attempt a:hover {
             text-decoration: underline;
         }
-
         .home-btn {
             background-color: #007bff;
             color: white;
             margin-top: 20px;
         }
-
         .home-btn:hover {
             background-color: #0056b3;
         }
@@ -213,7 +191,7 @@
                 document.getElementById('profileName').innerText = user.displayName || user.email.split('@')[0];
                 document.getElementById('profileEmail').innerText = user.email || 'No email available';
                 document.getElementById('profilePic').src = user.photoURL || 'https://via.placeholder.com/70';
-                fetchAttemptedTests(user.uid); // Fetch attempted tests for logged-in user
+                fetchAttemptedTests(user.email.replace('.', '_')); // Fetch attempted tests for logged-in user
             } else {
                 // User is not signed in, show the login form
                 document.getElementById('loginContainer').style.display = 'block';
@@ -302,24 +280,28 @@
             messageDiv.style.display = 'block';
         }
 
-        function fetchAttemptedTests(userId) {
+        function fetchAttemptedTests(userEmail) {
             const attemptsList = document.getElementById('attemptsList');
-            database.ref(`results/${userId}`).once('value').then(snapshot => {
+            database.ref(`results/${userEmail}`).once('value').then(snapshot => {
                 attemptsList.innerHTML = ''; // Clear previous attempts
-                snapshot.forEach(childSnapshot => {
-                    const attemptData = childSnapshot.val();
-                    const attemptID = childSnapshot.key;
-                    const date = new Date(parseInt(attemptID)).toLocaleString(); // Convert timestamp to date
-                    const score = attemptData.totalScore;
+                if (snapshot.exists()) {
+                    snapshot.forEach(childSnapshot => {
+                        const attemptData = childSnapshot.val();
+                        const attemptID = childSnapshot.key;
+                        const date = new Date(parseInt(attemptID)).toLocaleString(); // Convert timestamp to date
+                        const score = attemptData.totalScore;
 
-                    const attemptItem = document.createElement('div');
-                    attemptItem.className = 'attempt';
-                    attemptItem.innerHTML = `
-                        Attempt ID: ${attemptID} | Date: ${date} | Score: ${score}
-                        <span class="view-details" onclick="viewDetails('${attemptID}')">View Details</span>
-                    `;
-                    attemptsList.appendChild(attemptItem);
-                });
+                        const attemptItem = document.createElement('div');
+                        attemptItem.className = 'attempt';
+                        attemptItem.innerHTML = `
+                            Attempt ID: ${attemptID} | Date: ${date} | Score: ${score}
+                            <span class="view-details" onclick="viewDetails('${attemptID}')">View Details</span>
+                        `;
+                        attemptsList.appendChild(attemptItem);
+                    });
+                } else {
+                    attemptsList.innerHTML = '<div>No attempts found.</div>';
+                }
             });
         }
 
