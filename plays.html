@@ -18,16 +18,18 @@
             min-height: 100vh;
         }
         .image-container {
-            height: 50vh;
+            height: auto;
             overflow: auto;
             background-color: #fff;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            padding: 10px;
         }
         .preview-image {
             max-width: 100%;
             height: auto;
+            margin-bottom: 10px;
         }
         h1 {
             text-align: center;
@@ -93,8 +95,8 @@
     </style>
 </head>
 <body>
-    <div class="image-container">
-        <img src="https://firebasestorage.googleapis.com/v0/b/studymaterialapp-ba546.appspot.com/o/quiz_images%2F1000073902.jpg?alt=media&token=c58820da-59ca-44b8-8d78-2996d1ff3061" class="preview-image" alt="Quiz Preview">
+    <div class="image-container" id="imageContainer">
+        <!-- Images will be dynamically inserted here -->
     </div>
     <h1>Quiz App</h1>
     <div class="quiz-container">
@@ -133,10 +135,13 @@
         let selectedQuestions = [];
         let userAnswers = [];
         let currentQuestionIndex = 0;
+        let imageUrls = []; // To store image URLs
 
+        // Fetch quiz data including images
         database.ref(`quizzes/${quizID}`).once('value').then(snapshot => {
             const quizData = snapshot.val();
             const questions = quizData.questions;
+            imageUrls = quizData.images || []; // Assuming images are stored in quizData.images
 
             selectedQuestions = questions.map((q, index) => ({
                 question: q.question,
@@ -144,8 +149,20 @@
                 index: index
             }));
 
+            displayImages();
             displayQuestion();
         });
+
+        function displayImages() {
+            const imageContainer = document.getElementById('imageContainer');
+            imageContainer.innerHTML = ''; // Clear previous images
+            imageUrls.forEach(url => {
+                const imgElement = document.createElement('img');
+                imgElement.src = url;
+                imgElement.classList.add('preview-image');
+                imageContainer.appendChild(imgElement);
+            });
+        }
 
         function displayQuestion() {
             const questionContainer = document.getElementById('questionContainer');
