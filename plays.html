@@ -124,6 +124,7 @@
 
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-auth.js"></script>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAEHSaneKSBlpr5ZdDUJgECtp52h4bzP_Y",
@@ -138,6 +139,7 @@
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        const auth = firebase.auth();
 
         let selectedQuestions = [];
         let userAnswers = [];
@@ -152,7 +154,15 @@
         const subject = params.get('subject');
         const numQuestions = parseInt(params.get('numQuestions'));
 
-        fetchQuizData(subject, numQuestions);
+        // Check if user is authenticated
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                fetchQuizData(subject, numQuestions);
+            } else {
+                alert('You must be logged in to take the quiz.');
+                window.location.href = 'login.html'; // Redirect to login page
+            }
+        });
 
         function fetchQuizData(subject, numQuestions) {
             database.ref('quizzes').orderByChild('subjectName').equalTo(subject).once('value').then(snapshot => {
@@ -164,7 +174,7 @@
                 if (quizzes.length > 0) {
                     quizzes.forEach(quiz => {
                         selectedQuestions.push(...quiz.questions);
-                        quizImages.push(quiz.imageUrl);
+                        quizImages.push(...quiz.imageUrls); // Changed to support multiple images
                     });
 
                     if (numQuestions && numQuestions < selectedQuestions.length) {
@@ -258,22 +268,25 @@
         }
 
         function saveResults() {
-            const userId = "user123"; // Replace with dynamic user ID if available
-            const resultKey = Date.now();
+            const user = auth.currentUser; // Get the current user
+            if (user) {
+                const userEmail = user.email.replace('.', '_'); // Use a safe format for the email
+                const resultKey = Date.now();
 
-            database.ref(`results/${userId}/${resultKey}`).set({
-                correctOptions: selectedQuestions.map(q => q.correctOption),
-                selectedOptions: userAnswers,
-                totalCorrect,
-                totalIncorrect,
-                totalMissed,
-                totalScore,
-                images: quizImages
-            }).then(() => {
-                console.log("Results saved successfully!");
-            }).catch(error => {
-                console.error("Error saving results:", error);
-            });
+                database.ref(`results/${userEmail}/${resultKey}`).set({
+                    correctOptions: selectedQuestions.map(q => q.correctOption),
+                    selectedOptions: userAnswers,
+                    totalCorrect,
+                    totalIncorrect,
+                    totalMissed,
+                    totalScore,
+                    images: quizImages
+                }).then(() => {
+                    console.log("Results saved successfully!");
+                }).catch(error => {
+                    console.error("Error saving results:", error);
+                });
+            }
         }
     </script>
 </body>
