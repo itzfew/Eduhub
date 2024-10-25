@@ -174,7 +174,7 @@
                 if (quizzes.length > 0) {
                     quizzes.forEach(quiz => {
                         selectedQuestions.push(...quiz.questions);
-                        quizImages.push(quiz.imageUrl);
+                        quizImages.push(...quiz.imageUrls); // Changed to support multiple images
                     });
 
                     if (numQuestions && numQuestions < selectedQuestions.length) {
